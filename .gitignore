@@ -1,3 +1,7 @@
+#Directories
+Debug/
+.vs/
+
 # Prerequisites
 *.d
 
