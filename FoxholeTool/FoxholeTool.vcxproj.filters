@@ -24,17 +24,17 @@
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MouseClickHolder.h">
+    <ClInclude Include="FoxholeTool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MouseClickHolder.cpp">
+    <ClCompile Include="FoxholeTool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="MouseClickHolder.rc">
+    <ResourceCompile Include="FoxholeTool.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
@@ -42,7 +42,13 @@
     <Image Include="small.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="MouseClickHolder.ico">
+    <Image Include="FoxholeTool.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="FoxholeTool.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="foxholetoolwhite.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

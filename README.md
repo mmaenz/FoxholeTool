@@ -1,4 +1,4 @@
-# MouseClickHolder
+# FoxholeTool
 Holds LMB until mouse click.
 Needed for foxhole game, eat while building! Starving doesn't help anybody...
 

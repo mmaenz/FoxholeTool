@@ -22,8 +22,9 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{41a7fb0e-a397-490e-85f9-5ff75399771c}</ProjectGuid>
-    <RootNamespace>MouseClickHolder</RootNamespace>
+    <RootNamespace>FoxholeTool</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>FoxholeTool</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -92,6 +93,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -140,18 +142,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
-    <ClInclude Include="MouseClickHolder.h" />
+    <ClInclude Include="FoxholeTool.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MouseClickHolder.cpp" />
+    <ClCompile Include="FoxholeTool.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="MouseClickHolder.rc" />
+    <ResourceCompile Include="FoxholeTool.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="MouseClickHolder.ico" />
+    <Image Include="FoxholeTool.bmp" />
+    <Image Include="FoxholeTool.ico" />
+    <Image Include="foxholetoolwhite.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
