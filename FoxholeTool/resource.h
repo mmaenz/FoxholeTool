@@ -17,8 +17,11 @@
 #define IDM_CONTEXTMENU                 131
 #define IDM_EXIT                        32771
 #define ID_Menu                         32772
-#define IDC_STATIC                      -1
-
+#define WM_NOTIFYCALLBACK				200
+#define IDC_SYSLINK1                    1001
+#ifndef IDC_STATIC
+#define IDC_STATIC						-1
+#endif
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

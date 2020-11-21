@@ -24,12 +24,18 @@
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="stdatl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="FoxholeTool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FoxholeTool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdatl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

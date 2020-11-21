@@ -1,12 +1,132 @@
 // FoxholeTool.cpp : Defines the entry point for the application.
 //
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#pragma comment(lib, "comctl32.lib")
 
-#include "framework.h"
+
+#include "stdatl.h"
+
+#include <atlframe.h>
+#include <atlctrls.h>
+#include <atlctrlx.h>
+#include <atldlgs.h>
+#include <atlmisc.h>
+#include <atlctrlw.h>
+#include <atlprint.h>
+#include <atlfind.h>
+
 #include "FoxholeTool.h"
-#include <shellapi.h>
-#include <CommCtrl.h>
+
+CAppModule _Module;
+
+int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_HIDE) {
+    CMessageLoop theLoop;
+    _Module.AddMessageLoop(&theLoop);
+
+    CMainFrame wndMain;
+
+    if (wndMain.CreateEx() == NULL)
+    {
+        ATLTRACE(_T("Main window creation failed!\n"));
+        return 0;
+    }
+
+    wndMain.ShowWindow(nCmdShow);
+
+    int nRet = theLoop.Run();
+
+    _Module.RemoveMessageLoop();
+    return nRet;
+}
+
+int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE /*hPrevInst*/, LPTSTR lpstrCmdLine, int nCmdShow) {
+/*
+    INITCOMMONCONTROLSEX iccx;
+    iccx.dwSize = sizeof(iccx);
+    iccx.dwICC = ICC_COOL_CLASSES | ICC_BAR_CLASSES;
+    BOOL bRet = ::InitCommonControlsEx(&iccx);
+    bRet;
+    ATLASSERT(bRet);
+*/
+    hInstance = hInst;
+    HRESULT hRes = _Module.Init(NULL, hInst);
+    hRes;
+    ATLASSERT(SUCCEEDED(hRes));
+
+    int nRet = Run(lpstrCmdLine, SW_HIDE);
+
+    _Module.Term();
+    return nRet;
+}
+
+bool AddNotificationIcon(HWND hwnd, HINSTANCE hInstance) {
+    NOTIFYICONDATA nid = { sizeof(nid) };
+    nid.hWnd = hwnd;
+    // add the icon, setting the icon, tooltip, and callback message.
+    // the icon will be identified with the GUID
+    nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_GUID;
+    nid.guidItem = __uuidof(NotificationIcon);
+    nid.uCallbackMessage = WM_NOTIFYCALLBACK;
+    LoadIconMetric(hInstance, MAKEINTRESOURCE(IDI_FoxholeTool_white), LIM_SMALL, &nid.hIcon);
+    LoadString(hInstance, IDS_APP_TITLE, nid.szTip, ARRAYSIZE(nid.szTip));
+    Shell_NotifyIcon(NIM_ADD, &nid);
+    // NOTIFYICON_VERSION_4 is prefered
+    nid.uVersion = NOTIFYICON_VERSION_4;
+    return Shell_NotifyIcon(NIM_SETVERSION, &nid);
+}
+
+bool DeleteNotificationIcon() {
+    NOTIFYICONDATA nid = { sizeof(nid) };
+    nid.uFlags = NIF_GUID;
+    nid.guidItem = __uuidof(NotificationIcon);
+    return Shell_NotifyIcon(NIM_DELETE, &nid);
+}
+
+void ShowContextMenu(HWND hwnd, HINSTANCE hInstance) {
+    HMENU hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDM_CONTEXTMENU));
+    if (hMenu) {
+        HMENU hSubMenu = GetSubMenu(hMenu, 0);
+        if (hSubMenu) {
+            // our window must be foreground before calling TrackPopupMenu or the menu will not disappear when the user clicks away
+            SetForegroundWindow(hwnd);
+            POINT pt;
+            GetCursorPos(&pt);
+            // respect menu drop alignment
+            UINT uFlags = TPM_RIGHTBUTTON | TPM_BOTTOMALIGN;
+            if (GetSystemMetrics(SM_MENUDROPALIGNMENT) != 0) {
+                uFlags |= TPM_RIGHTALIGN;
+            } else {
+                uFlags |= TPM_LEFTALIGN;
+            }
+            TrackPopupMenuEx(hSubMenu, uFlags, pt.x, pt.y, hwnd, NULL);
+        }
+        DestroyMenu(hMenu);
+    }
+}
+
+void RegisterHotkeyF2(HWND hWnd) {
+    Input.type = INPUT_MOUSE;
+    Input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+
+    RegisterHotKey(
+        hWnd,
+        REGISTER_HOTKEY_F2,
+        MOD_NOREPEAT,
+        VK_F2);
+}
+
+void RegisterHotkeyF3(HWND hWnd) {
+    RegisterHotKey(
+        hWnd,
+        REGISTER_HOTKEY_F3,
+        MOD_NOREPEAT,
+        VK_F3);
+}
+
+void UnregisterHotkey(HWND hWnd, int hotkey) {
+    UnregisterHotKey(hWnd, hotkey);
+}
+
+/*
 
 #define MAX_LOADSTRING 100
 
@@ -53,18 +173,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDS_FoxholeTool));
-
     MSG msg;
 
     // Main message loop:
-    while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+    while (GetMessage(&msg, nullptr, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
 
     return (int) msg.wParam;
@@ -230,3 +344,5 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     }
     return 0;
 }
+
+*/
