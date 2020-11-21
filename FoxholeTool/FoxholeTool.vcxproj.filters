@@ -30,12 +30,21 @@
     <ClInclude Include="FoxholeTool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NTray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EditFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FoxholeTool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdatl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NTray.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

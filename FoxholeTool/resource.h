@@ -17,11 +17,20 @@
 #define IDM_CONTEXTMENU                 131
 #define IDM_EXIT                        32771
 #define ID_Menu                         32772
-#define WM_NOTIFYCALLBACK				200
+#define WM_NOTIFYCALLBACK				WM_USER + 200
 #define IDC_SYSLINK1                    1001
 #ifndef IDC_STATIC
 #define IDC_STATIC						-1
 #endif
+
+#define IDR_TRAYPOPUP                   WM_USER + 203
+#define IDC_ENEMY_DISTANCE				WM_USER + 300
+#define IDC_ENEMY_AZIMUTH				WM_USER + 301
+#define IDC_GUNNER_DISTANCE				WM_USER + 310
+#define IDC_GUNNER_AZIMUTH				WM_USER + 311
+#define IDC_RESULT_DISTANCE				WM_USER + 320
+#define IDC_RESULT_AZIMUTH				WM_USER + 321
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

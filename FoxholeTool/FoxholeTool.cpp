@@ -23,9 +23,8 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_HIDE) {
     _Module.AddMessageLoop(&theLoop);
 
     CMainFrame wndMain;
-
-    if (wndMain.CreateEx() == NULL)
-    {
+    HWND hWnd = wndMain.CreateEx();
+    if (hWnd == NULL) {
         ATLTRACE(_T("Main window creation failed!\n"));
         return 0;
     }
@@ -33,20 +32,11 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_HIDE) {
     wndMain.ShowWindow(nCmdShow);
 
     int nRet = theLoop.Run();
-
     _Module.RemoveMessageLoop();
     return nRet;
 }
 
 int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE /*hPrevInst*/, LPTSTR lpstrCmdLine, int nCmdShow) {
-/*
-    INITCOMMONCONTROLSEX iccx;
-    iccx.dwSize = sizeof(iccx);
-    iccx.dwICC = ICC_COOL_CLASSES | ICC_BAR_CLASSES;
-    BOOL bRet = ::InitCommonControlsEx(&iccx);
-    bRet;
-    ATLASSERT(bRet);
-*/
     hInstance = hInst;
     HRESULT hRes = _Module.Init(NULL, hInst);
     hRes;
@@ -56,29 +46,6 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE /*hPrevInst*/, LPTSTR lpstrCmdLi
 
     _Module.Term();
     return nRet;
-}
-
-bool AddNotificationIcon(HWND hwnd, HINSTANCE hInstance) {
-    NOTIFYICONDATA nid = { sizeof(nid) };
-    nid.hWnd = hwnd;
-    // add the icon, setting the icon, tooltip, and callback message.
-    // the icon will be identified with the GUID
-    nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_GUID;
-    nid.guidItem = __uuidof(NotificationIcon);
-    nid.uCallbackMessage = WM_NOTIFYCALLBACK;
-    LoadIconMetric(hInstance, MAKEINTRESOURCE(IDI_FoxholeTool_white), LIM_SMALL, &nid.hIcon);
-    LoadString(hInstance, IDS_APP_TITLE, nid.szTip, ARRAYSIZE(nid.szTip));
-    Shell_NotifyIcon(NIM_ADD, &nid);
-    // NOTIFYICON_VERSION_4 is prefered
-    nid.uVersion = NOTIFYICON_VERSION_4;
-    return Shell_NotifyIcon(NIM_SETVERSION, &nid);
-}
-
-bool DeleteNotificationIcon() {
-    NOTIFYICONDATA nid = { sizeof(nid) };
-    nid.uFlags = NIF_GUID;
-    nid.guidItem = __uuidof(NotificationIcon);
-    return Shell_NotifyIcon(NIM_DELETE, &nid);
 }
 
 void ShowContextMenu(HWND hwnd, HINSTANCE hInstance) {
@@ -124,6 +91,16 @@ void RegisterHotkeyF3(HWND hWnd) {
 
 void UnregisterHotkey(HWND hWnd, int hotkey) {
     UnregisterHotKey(hWnd, hotkey);
+}
+
+void SetWindowStyle(HWND hWnd) {
+    RECT rect;
+    GetWindowRect(hWnd, &rect);
+    SetWindowPos(hWnd, HWND_TOPMOST, rect.left, rect.top, 0, 0, SWP_NOSIZE);
+    LONG lStyle = GetWindowLong(hWnd, GWL_STYLE);
+    lStyle &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE | WS_SYSMENU);
+    SetWindowLong(hWnd, GWL_STYLE, lStyle);
+    SetWindowRgn(hWnd, CreateRoundRectRgn(0, 0, 562, 257, 20, 20), true);
 }
 
 /*
