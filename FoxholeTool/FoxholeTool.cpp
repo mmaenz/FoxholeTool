@@ -18,6 +18,154 @@
 
 CAppModule _Module;
 
+CMainFrame::CMainFrame() {
+	m_hIcon = CTrayNotifyIcon::LoadIcon(IDI_FoxholeTool_white);
+	formFont.CreateFont(-12, 0, 0, 0, FW_NORMAL, false, false, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
+	hbrWhite = static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH));
+	hbrBlack = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
+}
+
+BOOL CMainFrame::PreTranslateMessage(MSG* pMsg) {
+	return CFrameWindowImpl<CMainFrame>::PreTranslateMessage(pMsg);
+}
+
+BOOL CMainFrame::OnIdle() noexcept {
+	return FALSE;
+}
+
+int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
+	SetFont((HFONT)formFont);
+
+	CMessageLoop* pLoop = _Module.GetMessageLoop();
+	ATLASSERT(pLoop != NULL);
+	pLoop->AddMessageFilter(this);
+	pLoop->AddIdleHandler(this);
+
+	REGISTER_HOTKEY_F2 = GlobalAddAtomA("REGISTER_HOTKEY_F2");
+	REGISTER_HOTKEY_F3 = GlobalAddAtomA("REGISTER_HOTKEY_F3");
+	RegisterHotkeyF2(this->operator HWND());
+	RegisterHotkeyF3(this->operator HWND());
+	SetWindowStyle(this->operator HWND());
+	if (!m_TrayIcon.Create(this, IDR_TRAYPOPUP, _T("FoxholeTool\n\nF2 - use hammer\nF3 - artillery calculator"), m_hIcon, WM_NOTIFYCALLBACK, IDM_CONTEXTMENU, true)) {
+		ATLTRACE(_T("Failed to create tray icon 1\n"));
+		return -1;
+	}
+	return 0;
+}
+
+void CMainFrame::OnClose() {
+	if (overlayIsVisible) {
+		overlayIsVisible = !overlayIsVisible;
+		ShowWindow(overlayIsVisible);
+	}
+	else {
+		m_TrayIcon.Delete(true);
+		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_F2);
+		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_F3);
+		SetMsgHandled(false);
+		PostQuitMessage(0);
+	}
+}
+
+LRESULT CMainFrame::OnTrayMenu(UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	switch (LOWORD(lParam)) {
+	case WM_CONTEXTMENU: {
+		ShowContextMenu(this->operator HWND(), hInstance);
+		break;
+	}
+	}
+	return 0L;
+}
+
+void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
+	if (nHotKeyID == REGISTER_HOTKEY_F2) {
+		SendInput(1, &Input, sizeof(INPUT));
+	}
+	else if (nHotKeyID == REGISTER_HOTKEY_F3) {
+		overlayIsVisible = !overlayIsVisible;
+		ShowWindow(overlayIsVisible);
+		if (overlayIsVisible && (windowPos.left == 0 && windowPos.top == 0 && windowPos.right == 0 && windowPos.bottom == 0)) {
+			RECT screenRect = {};
+			::GetClientRect(GetDesktopWindow(), &screenRect);
+			RECT windowRect = {};
+			GetClientRect(&windowRect);
+			ClientToScreen(&windowRect);
+			int windowWidth = windowRect.right - windowRect.left;
+			int windowHeight = windowRect.bottom - windowRect.top;
+			windowPos.left = (screenRect.right / 2) - (windowWidth / 2);
+			windowPos.top = (screenRect.bottom / 2) - (windowHeight / 2);
+			windowPos.right = windowPos.left + windowWidth;
+			windowPos.bottom = windowPos.top + windowHeight;
+			ClientToScreen(&windowPos);
+			MoveWindow(&windowPos, true);
+		}
+		else {
+			MoveWindow(&windowPos, true);
+		}
+	}
+}
+
+void CMainFrame::OnMouseMove(UINT /*nFlags*/, CPoint point) {
+	if (dragWindow == true && (point.x != oldMousePos.x || point.y != oldMousePos.y)) {
+		int dx = point.x - oldMousePos.x;
+		int dy = point.y - oldMousePos.y;
+		oldMousePos.x = point.x;
+		oldMousePos.y = point.y;
+
+		RECT mainWindowRect;
+		int windowWidth, windowHeight;
+		GetWindowRect(&mainWindowRect);
+		windowHeight = mainWindowRect.bottom - mainWindowRect.top;
+		windowWidth = mainWindowRect.right - mainWindowRect.left;
+
+		/*
+		CPoint pos(mainWindowRect.left, mainWindowRect.top);
+		pos.x = pos.x + dx;
+		pos.y = pos.y + dy;
+		*/
+
+		ClientToScreen(&point);
+		MoveWindow(point.x, point.y, windowWidth, windowHeight, TRUE);
+	}
+}
+
+void CMainFrame::OnMouseUp(UINT /*nFlags*/, CPoint /*point*/) {
+	dragWindow = false;
+	ReleaseCapture();
+}
+
+void CMainFrame::OnMouseDown(UINT /*nFlags*/, CPoint point) {
+	oldMousePos.x = point.x;
+	oldMousePos.y = point.y;
+	dragWindow = true;
+	SetCapture();
+}
+
+BOOL CMainFrame::OnEraseBkgnd(CDCHandle dc) {
+	RECT rc;
+	GetClientRect(&rc);
+	SetMapMode(dc, MM_ANISOTROPIC);
+	SetWindowExtEx(dc, 100, 100, NULL);
+	SetViewportExtEx(dc, rc.right, rc.bottom, NULL);
+	FillRect(dc, &rc, hbrBlack);
+	return true;
+}
+
+HBRUSH CMainFrame::OnCtlColorStatic(CDCHandle dc, CStatic wndStatic) {
+	SetTextColor(dc, RGB(255, 255, 255));
+	SetBkColor(dc, RGB(0, 0, 0));
+	return hbrWhite;
+}
+void CMainFrame::OnExit(UINT /*uNotifyCode*/, int /*nID*/, CWindow /*wnd*/) {
+	overlayIsVisible = false;
+	PostMessage(WM_CLOSE);
+}
+
+
+void CMainFrame::OnAbout(UINT /*uNotifyCode*/, int /*nID*/, CWindow wnd) {
+	MessageBoxW(L"Made by [3SP] Ben Button\nhttps://github.com/mmaenz/foxholetool\n\nUse F2 for automatic hammer\nUse F3 for artillery calculator\n(Set Foxhole to windowed fullscreen for overlay)\n", L"FoxholeTool v0.0.1", MB_OK);
+}
+
 int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_HIDE) {
     CMessageLoop theLoop;
     _Module.AddMessageLoop(&theLoop);
@@ -103,223 +251,3 @@ void SetWindowStyle(HWND hWnd) {
     SetWindowRgn(hWnd, CreateRoundRectRgn(0, 0, 562, 257, 20, 20), true);
 }
 
-/*
-
-#define MAX_LOADSTRING 100
-
-// Use a guid to uniquely identify our icon
-class __declspec(uuid("9D0B8B92-4E1C-488e-A1E1-2331AFCE2CB5")) NotificationIcon;
-
-// Global Variables:
-HINSTANCE hInst;                                // current instance
-WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
-WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
-int REGISTERHOLD = 1;
-INPUT Input = { 0 };
-UINT const WMAPP_NOTIFYCALLBACK = WM_APP + 1;
-
-// Forward declarations of functions included in this code module:
-ATOM                MyRegisterClass(HINSTANCE hInstance);
-BOOL                InitInstance(HINSTANCE, int);
-LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
-BOOL                AddNotificationIcon(HWND hwnd);
-BOOL                DeleteNotificationIcon();
-void                ShowContextMenu(HWND hwnd, POINT pt);
-
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
-{
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
-
-    REGISTERHOLD = GlobalAddAtomA("REGISTER_HOTKEY");
-    Input.type = INPUT_MOUSE;
-    Input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-
-    // Initialize global strings
-    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDS_FoxholeTool, szWindowClass, MAX_LOADSTRING);
-    MyRegisterClass(hInstance);
-
-    // Perform application initialization:
-    if (!InitInstance (hInstance, nCmdShow))
-    {
-        return FALSE;
-    }
-
-    MSG msg;
-
-    // Main message loop:
-    while (GetMessage(&msg, nullptr, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-
-    return (int) msg.wParam;
-}
-
-//
-//  FUNCTION: MyRegisterClass()
-//
-//  PURPOSE: Registers the window class.
-//
-ATOM MyRegisterClass(HINSTANCE hInstance)
-{
-    WNDCLASSEXW wcex;
-
-    wcex.cbSize = sizeof(WNDCLASSEX);
-
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_FoxholeTool));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDS_FoxholeTool);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-    return RegisterClassExW(&wcex);
-}
-
-BOOL AddNotificationIcon(HWND hwnd)
-{
-    NOTIFYICONDATA nid = { sizeof(nid) };
-    nid.hWnd = hwnd;
-    // add the icon, setting the icon, tooltip, and callback message.
-    // the icon will be identified with the GUID
-    nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_GUID;
-    nid.guidItem = __uuidof(NotificationIcon);
-    nid.uCallbackMessage = WMAPP_NOTIFYCALLBACK;
-    LoadIconMetric(hInst, MAKEINTRESOURCE(IDI_FoxholeTool_white), LIM_SMALL, &nid.hIcon);
-    LoadString(hInst, IDS_APP_TITLE, nid.szTip, ARRAYSIZE(nid.szTip));
-    Shell_NotifyIcon(NIM_ADD, &nid);
-
-    // NOTIFYICON_VERSION_4 is prefered
-    nid.uVersion = NOTIFYICON_VERSION_4;
-    return Shell_NotifyIcon(NIM_SETVERSION, &nid);
-}
-
-BOOL DeleteNotificationIcon()
-{
-    NOTIFYICONDATA nid = { sizeof(nid) };
-    nid.uFlags = NIF_GUID;
-    nid.guidItem = __uuidof(NotificationIcon);
-    return Shell_NotifyIcon(NIM_DELETE, &nid);
-}
-
-
-void ShowContextMenu(HWND hwnd, POINT pt) {
-    HMENU hMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDM_CONTEXTMENU));
-    if (hMenu)
-    {
-        HMENU hSubMenu = GetSubMenu(hMenu, 0);
-        if (hSubMenu)
-        {
-            // our window must be foreground before calling TrackPopupMenu or the menu will not disappear when the user clicks away
-            SetForegroundWindow(hwnd);
-            GetCursorPos(&pt);
-            // respect menu drop alignment
-            UINT uFlags = TPM_RIGHTBUTTON | TPM_BOTTOMALIGN;
-            if (GetSystemMetrics(SM_MENUDROPALIGNMENT) != 0) {
-                uFlags |= TPM_RIGHTALIGN;
-            } else {
-                uFlags |= TPM_LEFTALIGN;
-            }
-            TrackPopupMenuEx(hSubMenu, uFlags, pt.x, pt.y, hwnd, NULL);
-        }
-        DestroyMenu(hMenu);
-    }
-}
-//
-//   FUNCTION: InitInstance(HINSTANCE, int)
-//
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
-//
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
-{
-   hInst = hInstance; // Store instance handle in our global variable
-
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
-
-   if (!hWnd)
-   {
-      return FALSE;
-   }
-
-   ShowWindow(hWnd, SW_HIDE);
-   UpdateWindow(hWnd);
-
-   RegisterHotKey(
-       hWnd,
-       REGISTERHOLD,
-       MOD_NOREPEAT,
-       VK_F2);
-   return TRUE;
-}
-
-//
-//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  PURPOSE: Processes messages for the main window.
-//
-//  WM_COMMAND  - process the application menu
-//  WM_PAINT    - Paint the main window
-//  WM_DESTROY  - post a quit message and return
-//
-//
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-    switch (message) {
-    case WMAPP_NOTIFYCALLBACK:
-        switch (LOWORD(lParam)) {
-            case WM_CONTEXTMENU: {
-                POINT const pt = { LOWORD(wParam), HIWORD(wParam) };
-                ShowContextMenu(hWnd, pt);
-            }
-            break;
-        }
-        break;    
-    case WM_CREATE:
-        if (!AddNotificationIcon(hWnd))
-        {
-            MessageBox(hWnd,
-                L"Please read the ReadMe.txt file for troubleshooting",
-                L"Error adding icon", MB_OK);
-            return -1;
-        }
-        break;
-    case WM_COMMAND:
-        switch(LOWORD(wParam)) {
-            case IDM_EXIT: {
-                DestroyWindow(hWnd);
-                break;
-            default: break;
-            }
-        }
-        break;
-    case WM_HOTKEY:        
-        SendInput(1, &Input, sizeof(INPUT));
-        break;
-    case WM_DESTROY:
-        UnregisterHotKey(hWnd, REGISTERHOLD);
-        DeleteNotificationIcon();
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
-}
-
-*/
