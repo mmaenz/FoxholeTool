@@ -28,20 +28,26 @@ bool overlayIsVisible = false;
 bool isDoubleKeypress = false;
 bool dragWindow = false;
 CPoint oldMousePos;
+int windowWidth = 560;
+int windowHeight = 257;
 
 // forwards
 void ShowContextMenu(HWND hWnd, HINSTANCE hInstance);
 void RegisterHotkeyF2(HWND hWnd);
 void RegisterHotkeyF3(HWND hWnd);
 void UnregisterHotkey(HWND hWnd, int hotkey);
-void SetWindowStyle(HWND hWnd);
+void SetWindowStyle(HWND hWnd, int width, int height);
+
+typedef CWinTraits<WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+	WS_EX_APPWINDOW> CMainFrameTraits;
 
 class CMainFrame :	public CFrameWindowImpl<CMainFrame>,
 					public CMessageFilter,
 					public CIdleHandler {
 public:
 	DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
-	CBitmap bg;
+	CBitmap background;
+	SIZE bgSize = {};
 	CTrayNotifyIcon m_TrayIcon;
 	HICON m_hIcon;
 	HBRUSH hbrWhite, hbrBlack;

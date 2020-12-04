@@ -36,8 +36,8 @@ BOOL CMainFrame::OnIdle() noexcept {
 }
 
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
-	bg.LoadBitmapW(MAKEINTRESOURCE(IDB_BACKGROUND));
-
+	background.LoadBitmap(MAKEINTRESOURCE(IDB_BACKGROUND));
+	background.GetBitmapDimension(&bgSize);
 	SetFont((HFONT)formFont);
 
 	CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -49,7 +49,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
 	REGISTER_HOTKEY_F3 = GlobalAddAtomA("REGISTER_HOTKEY_F3");
 	RegisterHotkeyF2(this->operator HWND());
 	RegisterHotkeyF3(this->operator HWND());
-	SetWindowStyle(this->operator HWND());
+	SetWindowStyle(this->operator HWND(), windowWidth, windowHeight);
 	if (!m_TrayIcon.Create(this, IDR_TRAYPOPUP, _T("FoxholeTool\n\nF2 - use hammer (click to stop)\nF3 - show/focus artillery calculator (2x hide)"), m_hIcon, WM_NOTIFYCALLBACK, IDM_CONTEXTMENU, true)) {
 		ATLTRACE(_T("Failed to create tray icon 1\n"));
 		return -1;
@@ -93,7 +93,6 @@ void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 			KillTimer(DOUBLE_KEYPRESS_TIMER);
 		}
 		else {
-
 			if (!overlayIsVisible) {
 				overlayIsVisible = !overlayIsVisible;
 				ShowWindow(overlayIsVisible);
@@ -150,22 +149,34 @@ void CMainFrame::OnMouseDown(UINT /*nFlags*/, CPoint point) {
 	dragWindow = true;
 }
 
-BOOL CMainFrame::OnEraseBkgnd(CDCHandle dc) {
-	CRect rc;
-	GetClientRect(&rc);
-	
-	SetMapMode(dc, MM_ANISOTROPIC);
-	SetWindowExtEx(dc, 100, 100, NULL);
-	SetViewportExtEx(dc, rc.right, rc.bottom, NULL);
-	FillRect(dc, &rc, hbrBlack);
-	
-	CDC dcMem;
-	dcMem.CreateCompatibleDC(dc);
-	HBITMAP hOldBitmap = dcMem.SelectBitmap(bg);
-	dcMem.BitBlt(0, 0, rc.Width(), rc.Height(), dcMem, 0, 0, SRCCOPY);
-	dcMem.SelectBitmap(hOldBitmap);
+BOOL CMainFrame::OnEraseBkgnd(CDCHandle handleCDC) {
+	if (!background.m_hBitmap) {
+		return true;
+	}
+
+	CRect rect;
+	GetClientRect(&rect);
+	/*
+	SetMapMode(handleCDC, MM_ANISOTROPIC);
+	SetWindowExtEx(handleCDC, 100, 100, NULL);
+	SetViewportExtEx(handleCDC, rect.right, rect.bottom, NULL);
+	FillRect(handleCDC, &rect, hbrBlack);
+	*/
+	CDCHandle hdc = ::CreateCompatibleDC(handleCDC);
+	hdc.SelectBitmap(background);
+	int bmw, bmh;
+	BITMAP bmap;
+	background.GetBitmap(&bmap);
+
+	bmw = bmap.bmWidth;
+	bmh = bmap.bmHeight;
+	handleCDC.BitBlt(0, 0, rect.Width(),
+		rect.Height(), hdc,
+		0, 0, SRCCOPY);
+	SetWindowStyle(this->operator HWND(), windowWidth, windowHeight);
 	return true;
 }
+
 
 HBRUSH CMainFrame::OnCtlColorStatic(CDCHandle dc, CStatic wndStatic) {
 	SetTextColor(dc, RGB(255, 255, 255));
@@ -265,13 +276,13 @@ void UnregisterHotkey(HWND hWnd, int hotkey) {
     UnregisterHotKey(hWnd, hotkey);
 }
 
-void SetWindowStyle(HWND hWnd) {
-    RECT rect;
-    GetWindowRect(hWnd, &rect);
-    SetWindowPos(hWnd, HWND_TOPMOST, rect.left, rect.top, 0, 0, SWP_NOSIZE);
+void SetWindowStyle(HWND hWnd, int width, int height) {
+    //RECT rect;
+    //GetWindowRect(hWnd, &rect);
+    //SetWindowPos(hWnd, HWND_TOPMOST, rect.left, rect.top, 0, 0, SWP_NOSIZE);
     LONG lStyle = GetWindowLong(hWnd, GWL_STYLE);
     lStyle &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE | WS_SYSMENU);
     SetWindowLong(hWnd, GWL_STYLE, lStyle);
-    SetWindowRgn(hWnd, CreateRoundRectRgn(0, 0, 562, 257, 20, 20), true);
+    SetWindowRgn(hWnd, CreateRoundRectRgn(0, 0, width, height, 20, 20), true);
 }
 
