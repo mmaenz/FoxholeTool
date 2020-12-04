@@ -22,8 +22,10 @@ class __declspec(uuid("9D0B8B92-4E1C-488e-A1E1-2331AFCE2CB5")) NotificationIcon;
 HINSTANCE hInstance = NULL;	// current instance
 int REGISTER_HOTKEY_F2 = 1;
 int REGISTER_HOTKEY_F3 = 2;
+int DOUBLE_KEYPRESS_TIMER = 1;
 INPUT Input = { 0 };
 bool overlayIsVisible = false;
+bool isDoubleKeypress = false;
 bool dragWindow = false;
 CPoint oldMousePos;
 
@@ -39,7 +41,7 @@ class CMainFrame :	public CFrameWindowImpl<CMainFrame>,
 					public CIdleHandler {
 public:
 	DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
-
+	CBitmap bg;
 	CTrayNotifyIcon m_TrayIcon;
 	HICON m_hIcon;
 	HBRUSH hbrWhite, hbrBlack;
@@ -49,8 +51,9 @@ public:
 	CFilterEdit gunnerDistance;
 	CFilterEdit gunnerAzimuth;
 	CEdit edit;
-	RECT windowPos = {};
-
+	POINT windowPos = {};
+	POINT point = {};
+	POINT curpoint = {};
 	CMainFrame();
 
 	BOOL PreTranslateMessage(MSG* pMsg) override;
@@ -60,6 +63,7 @@ public:
 	void OnClose();
 	LRESULT OnTrayMenu(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey);
+	void OnTimer(UINT_PTR /*nIDEvent*/);
 	void OnMouseMove(UINT /*nFlags*/, CPoint point);
 	void OnMouseUp(UINT /*nFlags*/, CPoint /*point*/);
 	void OnMouseDown(UINT /*nFlags*/, CPoint point);
@@ -72,6 +76,7 @@ public:
 		MSG_WM_CREATE(OnCreate)
 		MSG_WM_CLOSE(OnClose)
 		MSG_WM_HOTKEY(OnHotKey)
+		MSG_WM_TIMER(OnTimer)
 		MSG_WM_LBUTTONDOWN(OnMouseDown)
 		MSG_WM_LBUTTONUP(OnMouseUp)
 		MSG_WM_MOUSEMOVE(OnMouseMove)

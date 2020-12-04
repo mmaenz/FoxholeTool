@@ -15,6 +15,7 @@
 #define IDR_MAINFRAME                   128
 #define IDR_MENU1                       129
 #define IDM_CONTEXTMENU                 131
+#define IDB_BACKGROUND					133
 #define IDM_EXIT                        32771
 #define ID_Menu                         32772
 #define WM_NOTIFYCALLBACK				WM_USER + 200

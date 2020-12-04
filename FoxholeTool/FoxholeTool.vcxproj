@@ -147,6 +147,7 @@
     <ClInclude Include="EditFilter.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="FoxholeTool.h" />
+    <ClInclude Include="IOConsole.h" />
     <ClInclude Include="NTray.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdatl.h" />
@@ -161,6 +162,8 @@
     <ResourceCompile Include="FoxholeTool.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="background.bmp" />
+    <Image Include="bitmap1.bmp" />
     <Image Include="FoxholeTool.bmp" />
     <Image Include="FoxholeTool.ico" />
     <Image Include="foxholetoolwhite.ico" />

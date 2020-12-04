@@ -14,6 +14,8 @@
 #include <atlprint.h>
 #include <atlfind.h>
 
+#include <iostream>
+#include "IOConsole.h"
 #include "FoxholeTool.h"
 
 CAppModule _Module;
@@ -34,6 +36,8 @@ BOOL CMainFrame::OnIdle() noexcept {
 }
 
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
+	bg.LoadBitmapW(MAKEINTRESOURCE(IDB_BACKGROUND));
+
 	SetFont((HFONT)formFont);
 
 	CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -46,7 +50,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
 	RegisterHotkeyF2(this->operator HWND());
 	RegisterHotkeyF3(this->operator HWND());
 	SetWindowStyle(this->operator HWND());
-	if (!m_TrayIcon.Create(this, IDR_TRAYPOPUP, _T("FoxholeTool\n\nF2 - use hammer\nF3 - artillery calculator"), m_hIcon, WM_NOTIFYCALLBACK, IDM_CONTEXTMENU, true)) {
+	if (!m_TrayIcon.Create(this, IDR_TRAYPOPUP, _T("FoxholeTool\n\nF2 - use hammer (click to stop)\nF3 - show/focus artillery calculator (2x hide)"), m_hIcon, WM_NOTIFYCALLBACK, IDM_CONTEXTMENU, true)) {
 		ATLTRACE(_T("Failed to create tray icon 1\n"));
 		return -1;
 	}
@@ -82,50 +86,54 @@ void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 		SendInput(1, &Input, sizeof(INPUT));
 	}
 	else if (nHotKeyID == REGISTER_HOTKEY_F3) {
-		overlayIsVisible = !overlayIsVisible;
-		ShowWindow(overlayIsVisible);
-		if (overlayIsVisible && (windowPos.left == 0 && windowPos.top == 0 && windowPos.right == 0 && windowPos.bottom == 0)) {
-			RECT screenRect = {};
-			::GetClientRect(GetDesktopWindow(), &screenRect);
-			RECT windowRect = {};
-			GetClientRect(&windowRect);
-			ClientToScreen(&windowRect);
-			int windowWidth = windowRect.right - windowRect.left;
-			int windowHeight = windowRect.bottom - windowRect.top;
-			windowPos.left = (screenRect.right / 2) - (windowWidth / 2);
-			windowPos.top = (screenRect.bottom / 2) - (windowHeight / 2);
-			windowPos.right = windowPos.left + windowWidth;
-			windowPos.bottom = windowPos.top + windowHeight;
-			ClientToScreen(&windowPos);
-			MoveWindow(&windowPos, true);
+		if (isDoubleKeypress) {
+			overlayIsVisible = !overlayIsVisible;
+			ShowWindow(overlayIsVisible);
+			isDoubleKeypress = false;
+			KillTimer(DOUBLE_KEYPRESS_TIMER);
 		}
 		else {
-			MoveWindow(&windowPos, true);
+
+			if (!overlayIsVisible) {
+				overlayIsVisible = !overlayIsVisible;
+				ShowWindow(overlayIsVisible);
+				if (windowPos.x == 0 && windowPos.y == 0) {
+					RECT screenRect = {};
+					::GetClientRect(GetDesktopWindow(), &screenRect);
+					RECT windowRect = {};
+					GetClientRect(&windowRect);
+					ClientToScreen(&windowRect);
+					int windowWidth = windowRect.right - windowRect.left;
+					int windowHeight = windowRect.bottom - windowRect.top;
+					windowPos.x = (screenRect.right / 2) - (windowWidth / 2);
+					windowPos.y = (screenRect.bottom / 2) - (windowHeight / 2);
+					ClientToScreen(&windowPos);
+					SetWindowPos(HWND_TOP, windowPos.x, windowPos.y, 0, 0, SWP_NOSIZE);
+				}
+				else {
+					SetWindowPos(HWND_TOP, windowPos.x, windowPos.y, 0, 0, SWP_NOSIZE);
+				}
+			}
+			else {
+				SetFocus();
+				SetTimer(DOUBLE_KEYPRESS_TIMER, 500);
+				isDoubleKeypress = true;
+			}
 		}
 	}
 }
 
-void CMainFrame::OnMouseMove(UINT /*nFlags*/, CPoint point) {
-	if (dragWindow == true && (point.x != oldMousePos.x || point.y != oldMousePos.y)) {
-		int dx = point.x - oldMousePos.x;
-		int dy = point.y - oldMousePos.y;
-		oldMousePos.x = point.x;
-		oldMousePos.y = point.y;
+void CMainFrame::OnTimer(UINT_PTR timerId) {
+	KillTimer(timerId);
+	isDoubleKeypress = false;
+}
 
-		RECT mainWindowRect;
-		int windowWidth, windowHeight;
-		GetWindowRect(&mainWindowRect);
-		windowHeight = mainWindowRect.bottom - mainWindowRect.top;
-		windowWidth = mainWindowRect.right - mainWindowRect.left;
-
-		/*
-		CPoint pos(mainWindowRect.left, mainWindowRect.top);
-		pos.x = pos.x + dx;
-		pos.y = pos.y + dy;
-		*/
-
-		ClientToScreen(&point);
-		MoveWindow(point.x, point.y, windowWidth, windowHeight, TRUE);
+void CMainFrame::OnMouseMove(UINT /*nFlags*/, CPoint /*point*/) {
+	if (dragWindow == true) {
+		GetCursorPos(&curpoint);
+		windowPos.x = curpoint.x - point.x;
+		windowPos.y = curpoint.y - point.y;
+		SetWindowPos(HWND_TOP, windowPos.x, windowPos.y, 0, 0, SWP_NOSIZE);
 	}
 }
 
@@ -135,26 +143,35 @@ void CMainFrame::OnMouseUp(UINT /*nFlags*/, CPoint /*point*/) {
 }
 
 void CMainFrame::OnMouseDown(UINT /*nFlags*/, CPoint point) {
-	oldMousePos.x = point.x;
-	oldMousePos.y = point.y;
-	dragWindow = true;
 	SetCapture();
+	//save current cursor coordinate
+	GetCursorPos(&point);
+	ScreenToClient(&point);
+	dragWindow = true;
 }
 
 BOOL CMainFrame::OnEraseBkgnd(CDCHandle dc) {
-	RECT rc;
+	CRect rc;
 	GetClientRect(&rc);
+	
 	SetMapMode(dc, MM_ANISOTROPIC);
 	SetWindowExtEx(dc, 100, 100, NULL);
 	SetViewportExtEx(dc, rc.right, rc.bottom, NULL);
 	FillRect(dc, &rc, hbrBlack);
+	
+	CDC dcMem;
+	dcMem.CreateCompatibleDC(dc);
+	HBITMAP hOldBitmap = dcMem.SelectBitmap(bg);
+	dcMem.BitBlt(0, 0, rc.Width(), rc.Height(), dcMem, 0, 0, SRCCOPY);
+	dcMem.SelectBitmap(hOldBitmap);
 	return true;
 }
 
 HBRUSH CMainFrame::OnCtlColorStatic(CDCHandle dc, CStatic wndStatic) {
 	SetTextColor(dc, RGB(255, 255, 255));
-	SetBkColor(dc, RGB(0, 0, 0));
-	return hbrWhite;
+	//SetBkColor(dc, RGB(0, 0, 0));
+	SetBkMode(dc, TRANSPARENT);
+	return (HBRUSH)::GetStockObject(NULL_BRUSH);
 }
 void CMainFrame::OnExit(UINT /*uNotifyCode*/, int /*nID*/, CWindow /*wnd*/) {
 	overlayIsVisible = false;
@@ -163,7 +180,7 @@ void CMainFrame::OnExit(UINT /*uNotifyCode*/, int /*nID*/, CWindow /*wnd*/) {
 
 
 void CMainFrame::OnAbout(UINT /*uNotifyCode*/, int /*nID*/, CWindow wnd) {
-	MessageBoxW(L"Made by [3SP] Ben Button\nhttps://github.com/mmaenz/foxholetool\n\nUse F2 for automatic hammer\nUse F3 for artillery calculator\n(Set Foxhole to windowed fullscreen for overlay)\n", L"FoxholeTool v0.0.1", MB_OK);
+	MessageBoxW(L"Made by [3SP] Ben Button\nhttps://github.com/mmaenz/foxholetool\n\nUse F2 for automatic hammer\nUse F3 to show/refocus artillery calculator\nDouble F3 to hide\n(Set Foxhole to windowed fullscreen for overlay)\n", L"FoxholeTool v0.0.1", MB_OK);
 }
 
 int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_HIDE) {
@@ -185,7 +202,10 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_HIDE) {
 }
 
 int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE /*hPrevInst*/, LPTSTR lpstrCmdLine, int nCmdShow) {
-    hInstance = hInst;
+#ifdef _DEBUG
+	RedirectConsoleIO();
+#endif
+	hInstance = hInst;
     HRESULT hRes = _Module.Init(NULL, hInst);
     hRes;
     ATLASSERT(SUCCEEDED(hRes));
@@ -194,6 +214,10 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE /*hPrevInst*/, LPTSTR lpstrCmdLi
 
     _Module.Term();
     return nRet;
+}
+
+int main() {
+	return _tWinMain(GetModuleHandle(NULL), NULL, NULL, SW_SHOWNORMAL);
 }
 
 void ShowContextMenu(HWND hwnd, HINSTANCE hInstance) {
