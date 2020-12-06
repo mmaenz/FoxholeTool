@@ -38,6 +38,11 @@ void RegisterHotkeyF3(HWND hWnd);
 void UnregisterHotkey(HWND hWnd, int hotkey);
 void SetWindowStyle(HWND hWnd, int width, int height);
 
+#include <corecrt_math_defines.h>
+#define ToRadian(angleDegrees) ((angleDegrees) * M_PI / 180.0)
+#define ToDegree(angleRadians) ((angleRadians) * 180.0 / M_PI)
+#define Angle(angle) ((angle > 360) ? angle - 360 : angle)
+
 class CEditCtl : public CWindowImpl<CEditCtl, CEdit> {
 	BEGIN_MSG_MAP(CEditCtl)
 	END_MSG_MAP()
@@ -81,7 +86,10 @@ public:
 	void OnExit(UINT /*uNotifyCode*/, int /*nID*/, CWindow /*wnd*/);
 	void OnAbout(UINT /*uNotifyCode*/, int /*nID*/, CWindow wnd);
 	void InitializeControls(void);
-	void OnChar(TCHAR chChar, UINT nRepCnt, UINT nFlags);
+	LRESULT OnChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	float toFloat(CString string);
+	void calculate(float eD, float eA, float gD, float gA);
+	void copyToClipboard(CString data);
 
 	BEGIN_MSG_MAP_EX(CMainFrame)
 		MSG_WM_CREATE(OnCreate)
@@ -89,7 +97,7 @@ public:
 		MSG_WM_CLOSE(OnClose)
 		MSG_WM_HOTKEY(OnHotKey)
 		MSG_WM_TIMER(OnTimer)
-		MSG_WM_CHAR(OnChar)
+		MESSAGE_HANDLER(WM_CHANGE, OnChange)
 		MSG_WM_LBUTTONDOWN(OnMouseDown)
 		MSG_WM_LBUTTONUP(OnMouseUp)
 		MSG_WM_MOUSEMOVE(OnMouseMove)

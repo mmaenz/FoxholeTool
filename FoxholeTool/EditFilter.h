@@ -45,6 +45,7 @@
 #define ES_EX_JUMPY           0x00000001
 #define ES_EX_INCLUDEMASK     0x00000002
 #define ES_EX_EXCLUDEMASK     0x00000004
+#define WM_CHANGE             (WM_USER + 99)
 
 class CFilterEdit : 
    public CWindowImpl< CFilterEdit, CEdit, CControlWinTraits >
@@ -129,7 +130,9 @@ public:
       POINT pt;
       ::GetCaretPos(&pt);
       if( CharFromPos(pt)==(int)GetLimitText() ) {
-         ::SetFocus( ::GetNextDlgTabItem(GetParent(), m_hWnd, FALSE) );
+          CEdit next = ::GetNextDlgTabItem(GetParent(), m_hWnd, FALSE);
+          ::SetFocus( next );
+          next.SetSel(0, -1);
          return TRUE;
       }
       return FALSE;
@@ -197,9 +200,9 @@ public:
       }
 
       LRESULT lResult = DefWindowProc(uMsg, wParam, lParam);
-
+      ::PostMessage(GetParent(), WM_CHANGE, 0, 0);
       if( m_dwExtStyle & ES_EX_JUMPY ) _NextDlgItem();
-      SetMsgHandled(false);
+
       return lResult;
    }
 
@@ -208,7 +211,7 @@ public:
       if( wParam==VK_RIGHT && (m_dwExtStyle & ES_EX_JUMPY) ) {
          if( _NextDlgItem() ) return 0;
       }
-      SetMsgHandled(false);
+      bHandled = FALSE;
       return 0;
    }
 
@@ -219,7 +222,7 @@ public:
          //::MessageBeep((UINT)-1);
          return 0;
       }
-      SetMsgHandled(false);
+      bHandled = false;
       return 0;
    }
 
@@ -245,7 +248,7 @@ public:
          SetSel(0,0);
          //::MessageBeep((UINT)-1);
       }
-      SetMsgHandled(false);
+      
       return lResult;
    }
 };

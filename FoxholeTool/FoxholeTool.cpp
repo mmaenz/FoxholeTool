@@ -15,6 +15,7 @@
 #include <atlfind.h>
 
 #include <iostream>
+#include <sstream>
 #include "IOConsole.h"
 #include "FoxholeTool.h"
 
@@ -107,6 +108,7 @@ void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 			}
 			else {
 				SetActiveWindow();
+				SetForegroundWindow(this->operator HWND());
 				SetFocus();
 				//KillTimer(DOUBLE_KEYPRESS_TIMER);
 				isDoubleKeypress = true;
@@ -119,11 +121,9 @@ void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 void CMainFrame::OnTimer(UINT_PTR timerId) {
 	KillTimer(timerId);
 	isDoubleKeypress = false;
-	std::cout << "Timer off" << std::endl;
 }
 
 void CMainFrame::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) {
-	std::cout << "keypressed" << std::endl;
 }
 
 void CMainFrame::OnMouseMove(UINT /*nFlags*/, CPoint /*point*/) {
@@ -204,10 +204,115 @@ void CMainFrame::InitializeControls(void) {
 	editGunnerAzimuth.SetLimitText(6);
 	editGunnerAzimuth.SetExtendedEditStyle(ES_EX_JUMPY);
 	editGunnerAzimuth.SetIncludeMask(_T("1234567890."));
+	editResultDistance.SubclassWindow(GetDlgItem(IDC_RESULT_DISTANCE));
+	editResultAzimuth.SubclassWindow(GetDlgItem(IDC_RESULT_AZIMUTH));
 }
 
-void CMainFrame::OnChar(TCHAR chChar, UINT nRepCnt, UINT nFlags) {
-	std::cout << "keypress" << std::endl;
+LRESULT CMainFrame::OnChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	CString sWindowText;
+	editEnemyDistance.GetWindowText(sWindowText);
+	float eD = toFloat(sWindowText);
+	if (eD == -1) {
+		return LRESULT();
+	}
+
+	editEnemyAzimuth.GetWindowText(sWindowText);
+	float eA = toFloat(sWindowText);
+	if (eA == -1) {
+		return LRESULT();
+	}
+
+	editGunnerDistance.GetWindowText(sWindowText);
+	float gD = toFloat(sWindowText);
+	if (gD == -1) {
+		return LRESULT();
+	}
+
+	editGunnerAzimuth.GetWindowText(sWindowText);
+	float gA = toFloat(sWindowText);
+	if (gA == -1) {
+		return LRESULT();
+	}
+
+	calculate(eD, eA, gD, gA);
+
+	return LRESULT();
+}
+
+float CMainFrame::toFloat(CString toFloat) {
+	std::istringstream iss(CStringA(toFloat).GetString());
+	float f;
+	iss >> std::noskipws >> f; // noskipws considers leading whitespace invalid
+	// Check the entire string was consumed and if either failbit or badbit is set
+	if (iss.eof() && !iss.fail()) {
+		if (f <= 360 && f >= 0) {
+			return std::ceilf(f * 100.0) / 100.0;
+		}
+	}
+	return -1;
+}
+
+void CMainFrame::calculate(float eD, float eA, float gD, float gA) {
+	float aD = 0.f;
+	float rD = 0.f;
+	float aS = 0.f;
+	float rA = 0.f;
+
+	aD = (eA > gA) ? ToRadian(eA - gA) : ToRadian(gA - eA);
+
+	rD = std::sqrt(eD * eD + gD * gD - 2 * eD * gD * std::cos(aD));
+
+	if (rD >= 45 && eD != 0) {
+		aS = std::roundf(ToDegree(std::acos((-(eD * eD) + gD * gD + rD * rD) / (2 * gD * rD))));
+		if (Angle(ToDegree(aD)) > 180) {
+			rA = (eA > gA) ? gA + 180 + aS : gA + 180 - aS;
+		} else {
+			if (eA > gA) {
+				rA = gA + 180 - aS;
+			} else {
+				rA = gA + 180 + aS;
+			}
+		}
+		
+		rA = Angle(std::roundf(rA));
+		
+		CString resultDistance;
+		resultDistance.Format(_T("%.2f"), rD);
+		CString resultAzimuth;
+		resultAzimuth.Format(_T("%.2f"), rA);
+		editResultDistance.SetWindowText(resultDistance);
+		editResultAzimuth.SetWindowText(resultAzimuth);
+		CString result;
+		result.Format(_T("Distance %.2f / Azimuth %.2f"), rD, rA);
+		copyToClipboard(result);
+	}
+}
+
+void CMainFrame::copyToClipboard(CString data) {
+	if (!OpenClipboard()) {
+		return;
+	}
+	// Remove the current Clipboard contents
+	if (!EmptyClipboard()) {
+		return;
+	}
+
+	size_t size = sizeof(TCHAR) * (1 + data.GetLength());
+	HGLOBAL hResult = GlobalAlloc(GMEM_MOVEABLE, size);
+	LPTSTR lptstrCopy = (LPTSTR)GlobalLock(hResult);
+	memcpy(lptstrCopy, data.GetBuffer(), size);
+	GlobalUnlock(hResult);
+#ifndef _UNICODE
+	if (::SetClipboardData(CF_TEXT, hResult) == NULL)
+#else
+	if (::SetClipboardData(CF_UNICODETEXT, hResult) == NULL)
+#endif
+	{
+		GlobalFree(hResult);
+		CloseClipboard();
+		return;
+	}
+	CloseClipboard();
 }
 
 int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_HIDE) {
