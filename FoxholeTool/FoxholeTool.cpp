@@ -23,12 +23,10 @@ CAppModule _Module;
 CMainFrame::CMainFrame() {
 	m_hIcon = CTrayNotifyIcon::LoadIcon(IDI_FoxholeTool_white);
 	formFont.CreateFont(-12, 0, 0, 0, FW_NORMAL, false, false, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
-	hbrWhite = static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH));
-	hbrBlack = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
 }
 
 BOOL CMainFrame::PreTranslateMessage(MSG* pMsg) {
-	return CFrameWindowImpl<CMainFrame>::PreTranslateMessage(pMsg);
+	return CWindow::IsDialogMessage(pMsg);
 }
 
 BOOL CMainFrame::OnIdle() noexcept {
@@ -36,6 +34,13 @@ BOOL CMainFrame::OnIdle() noexcept {
 }
 
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
+	hbrWhite = static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH));
+	hbrBlack = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
+	SetMsgHandled(false);
+	return 0;
+}
+
+LRESULT CMainFrame::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	background.LoadBitmap(MAKEINTRESOURCE(IDB_BACKGROUND));
 	background.GetBitmapDimension(&bgSize);
 	SetFont((HFONT)formFont);
@@ -54,7 +59,10 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
 		ATLTRACE(_T("Failed to create tray icon 1\n"));
 		return -1;
 	}
-	return 0;
+
+	CenterWindow();
+	this->InitializeControls();
+	return LRESULT();
 }
 
 void CMainFrame::OnClose() {
@@ -90,33 +98,19 @@ void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 			overlayIsVisible = !overlayIsVisible;
 			ShowWindow(overlayIsVisible);
 			isDoubleKeypress = false;
-			KillTimer(DOUBLE_KEYPRESS_TIMER);
+			//KillTimer(DOUBLE_KEYPRESS_TIMER);
 		}
 		else {
 			if (!overlayIsVisible) {
 				overlayIsVisible = !overlayIsVisible;
 				ShowWindow(overlayIsVisible);
-				if (windowPos.x == 0 && windowPos.y == 0) {
-					RECT screenRect = {};
-					::GetClientRect(GetDesktopWindow(), &screenRect);
-					RECT windowRect = {};
-					GetClientRect(&windowRect);
-					ClientToScreen(&windowRect);
-					int windowWidth = windowRect.right - windowRect.left;
-					int windowHeight = windowRect.bottom - windowRect.top;
-					windowPos.x = (screenRect.right / 2) - (windowWidth / 2);
-					windowPos.y = (screenRect.bottom / 2) - (windowHeight / 2);
-					ClientToScreen(&windowPos);
-					SetWindowPos(HWND_TOP, windowPos.x, windowPos.y, 0, 0, SWP_NOSIZE);
-				}
-				else {
-					SetWindowPos(HWND_TOP, windowPos.x, windowPos.y, 0, 0, SWP_NOSIZE);
-				}
 			}
 			else {
+				SetActiveWindow();
 				SetFocus();
-				SetTimer(DOUBLE_KEYPRESS_TIMER, 500);
+				//KillTimer(DOUBLE_KEYPRESS_TIMER);
 				isDoubleKeypress = true;
+				SetTimer(DOUBLE_KEYPRESS_TIMER, GetDoubleClickTime());
 			}
 		}
 	}
@@ -125,6 +119,11 @@ void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 void CMainFrame::OnTimer(UINT_PTR timerId) {
 	KillTimer(timerId);
 	isDoubleKeypress = false;
+	std::cout << "Timer off" << std::endl;
+}
+
+void CMainFrame::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) {
+	std::cout << "keypressed" << std::endl;
 }
 
 void CMainFrame::OnMouseMove(UINT /*nFlags*/, CPoint /*point*/) {
@@ -149,38 +148,32 @@ void CMainFrame::OnMouseDown(UINT /*nFlags*/, CPoint point) {
 	dragWindow = true;
 }
 
-BOOL CMainFrame::OnEraseBkgnd(CDCHandle handleCDC) {
+BOOL CMainFrame::OnEraseBkgnd(CDCHandle dc) {
 	if (!background.m_hBitmap) {
 		return true;
 	}
+	CRect rc;
+	GetClientRect(&rc);
+	SetMapMode(dc, MM_ANISOTROPIC);
+	SetWindowExtEx(dc, 100, 100, NULL);
+	SetViewportExtEx(dc, rc.right, rc.bottom, NULL);
+	FillRect(dc, &rc, hbrBlack);
 
-	CRect rect;
-	GetClientRect(&rect);
 	/*
-	SetMapMode(handleCDC, MM_ANISOTROPIC);
-	SetWindowExtEx(handleCDC, 100, 100, NULL);
-	SetViewportExtEx(handleCDC, rect.right, rect.bottom, NULL);
-	FillRect(handleCDC, &rect, hbrBlack);
-	*/
-	CDCHandle hdc = ::CreateCompatibleDC(handleCDC);
-	hdc.SelectBitmap(background);
-	int bmw, bmh;
-	BITMAP bmap;
-	background.GetBitmap(&bmap);
+	CDC dcMem;
+	dcMem.CreateCompatibleDC(dc);
+	HBITMAP cache = dcMem.SelectBitmap(background.m_hBitmap);
 
-	bmw = bmap.bmWidth;
-	bmh = bmap.bmHeight;
-	handleCDC.BitBlt(0, 0, rect.Width(),
-		rect.Height(), hdc,
-		0, 0, SRCCOPY);
-	SetWindowStyle(this->operator HWND(), windowWidth, windowHeight);
+	dc.BitBlt(0, 0, bgSize.cx, bgSize.cy, dcMem, 0, 0, SRCCOPY);
+	dc.SelectBitmap(cache); 
+	*/
 	return true;
 }
 
 
 HBRUSH CMainFrame::OnCtlColorStatic(CDCHandle dc, CStatic wndStatic) {
 	SetTextColor(dc, RGB(255, 255, 255));
-	//SetBkColor(dc, RGB(0, 0, 0));
+	SetBkColor(dc, RGB(0, 0, 0));
 	SetBkMode(dc, TRANSPARENT);
 	return (HBRUSH)::GetStockObject(NULL_BRUSH);
 }
@@ -194,12 +187,36 @@ void CMainFrame::OnAbout(UINT /*uNotifyCode*/, int /*nID*/, CWindow wnd) {
 	MessageBoxW(L"Made by [3SP] Ben Button\nhttps://github.com/mmaenz/foxholetool\n\nUse F2 for automatic hammer\nUse F3 to show/refocus artillery calculator\nDouble F3 to hide\n(Set Foxhole to windowed fullscreen for overlay)\n", L"FoxholeTool v0.0.1", MB_OK);
 }
 
+void CMainFrame::InitializeControls(void) {
+	editEnemyDistance.SubclassWindow(GetDlgItem(IDC_ENEMY_DISTANCE));
+	editEnemyDistance.SetLimitText(6);
+	editEnemyDistance.SetExtendedEditStyle(ES_EX_JUMPY);
+	editEnemyDistance.SetIncludeMask(_T("1234567890."));
+	editEnemyAzimuth.SubclassWindow(GetDlgItem(IDC_ENEMY_AZIMUTH));
+	editEnemyAzimuth.SetLimitText(6);
+	editEnemyAzimuth.SetExtendedEditStyle(ES_EX_JUMPY);
+	editEnemyAzimuth.SetIncludeMask(_T("1234567890."));
+	editGunnerDistance.SubclassWindow(GetDlgItem(IDC_GUNNER_DISTANCE));
+	editGunnerDistance.SetLimitText(6);
+	editGunnerDistance.SetExtendedEditStyle(ES_EX_JUMPY);
+	editGunnerDistance.SetIncludeMask(_T("1234567890."));
+	editGunnerAzimuth.SubclassWindow(GetDlgItem(IDC_GUNNER_AZIMUTH));
+	editGunnerAzimuth.SetLimitText(6);
+	editGunnerAzimuth.SetExtendedEditStyle(ES_EX_JUMPY);
+	editGunnerAzimuth.SetIncludeMask(_T("1234567890."));
+}
+
+void CMainFrame::OnChar(TCHAR chChar, UINT nRepCnt, UINT nFlags) {
+	std::cout << "keypress" << std::endl;
+}
+
 int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_HIDE) {
     CMessageLoop theLoop;
     _Module.AddMessageLoop(&theLoop);
 
     CMainFrame wndMain;
-    HWND hWnd = wndMain.CreateEx();
+    
+	HWND hWnd = wndMain.Create(NULL);
     if (hWnd == NULL) {
         ATLTRACE(_T("Main window creation failed!\n"));
         return 0;

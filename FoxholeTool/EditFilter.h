@@ -46,7 +46,6 @@
 #define ES_EX_INCLUDEMASK     0x00000002
 #define ES_EX_EXCLUDEMASK     0x00000004
 
-
 class CFilterEdit : 
    public CWindowImpl< CFilterEdit, CEdit, CControlWinTraits >
 {
@@ -66,7 +65,6 @@ public:
    DWORD m_dwExtStyle;
    TCHAR m_szExclude[MAX_MASK_LEN+1];
    TCHAR m_szInclude[MAX_MASK_LEN+1];
-
    // Operations
 
    BOOL SubclassWindow(HWND hWnd)
@@ -182,7 +180,7 @@ public:
 #else
             if( _tcschr(m_szExclude, ch)!=NULL ) {
 #endif
-               ::MessageBeep((UINT)-1);
+               //::MessageBeep((UINT)-1);
                return 0;
             }
          }
@@ -192,7 +190,7 @@ public:
 #else
             if( _tcschr(m_szInclude, ch)==NULL ) {
 #endif
-               ::MessageBeep((UINT)-1);
+               //::MessageBeep((UINT)-1);
                return 0;
             }
          }
@@ -201,7 +199,7 @@ public:
       LRESULT lResult = DefWindowProc(uMsg, wParam, lParam);
 
       if( m_dwExtStyle & ES_EX_JUMPY ) _NextDlgItem();
-
+      SetMsgHandled(false);
       return lResult;
    }
 
@@ -210,7 +208,7 @@ public:
       if( wParam==VK_RIGHT && (m_dwExtStyle & ES_EX_JUMPY) ) {
          if( _NextDlgItem() ) return 0;
       }
-      bHandled = FALSE;
+      SetMsgHandled(false);
       return 0;
    }
 
@@ -218,10 +216,10 @@ public:
    {
       LPCTSTR pstr = (LPCTSTR)lParam;
       if( _CheckText(pstr)==FALSE ) {
-         ::MessageBeep((UINT)-1);
+         //::MessageBeep((UINT)-1);
          return 0;
       }
-      bHandled = FALSE;
+      SetMsgHandled(false);
       return 0;
    }
 
@@ -245,8 +243,9 @@ public:
       if( _CheckText(pstrNew)==FALSE ) {
          SetWindowText(pstrOld);
          SetSel(0,0);
-         ::MessageBeep((UINT)-1);
+         //::MessageBeep((UINT)-1);
       }
+      SetMsgHandled(false);
       return lResult;
    }
 };

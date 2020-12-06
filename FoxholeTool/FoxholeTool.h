@@ -28,8 +28,8 @@ bool overlayIsVisible = false;
 bool isDoubleKeypress = false;
 bool dragWindow = false;
 CPoint oldMousePos;
-int windowWidth = 560;
-int windowHeight = 257;
+int windowWidth = 400;
+int windowHeight = 200;
 
 // forwards
 void ShowContextMenu(HWND hWnd, HINSTANCE hInstance);
@@ -38,24 +38,25 @@ void RegisterHotkeyF3(HWND hWnd);
 void UnregisterHotkey(HWND hWnd, int hotkey);
 void SetWindowStyle(HWND hWnd, int width, int height);
 
+class CEditCtl : public CWindowImpl<CEditCtl, CEdit> {
+	BEGIN_MSG_MAP(CEditCtl)
+	END_MSG_MAP()
+};
+
 typedef CWinTraits<WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
 	WS_EX_APPWINDOW> CMainFrameTraits;
 
-class CMainFrame :	public CFrameWindowImpl<CMainFrame>,
+class CMainFrame :	public CDialogImpl<CMainFrame>,
 					public CMessageFilter,
 					public CIdleHandler {
 public:
-	DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
+	enum { IDD = IDD_FoxholeTool_DIALOG	};
 	CBitmap background;
 	SIZE bgSize = {};
 	CTrayNotifyIcon m_TrayIcon;
 	HICON m_hIcon;
 	HBRUSH hbrWhite, hbrBlack;
 	CFont	formFont;
-	CFilterEdit enemyDistance;
-	CFilterEdit enemyAzimuth;
-	CFilterEdit gunnerDistance;
-	CFilterEdit gunnerAzimuth;
 	CEdit edit;
 	POINT windowPos = {};
 	POINT point = {};
@@ -66,10 +67,12 @@ public:
 	BOOL OnIdle() noexcept override;
 
 	int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	void OnClose();
 	LRESULT OnTrayMenu(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey);
 	void OnTimer(UINT_PTR /*nIDEvent*/);
+	void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
 	void OnMouseMove(UINT /*nFlags*/, CPoint point);
 	void OnMouseUp(UINT /*nFlags*/, CPoint /*point*/);
 	void OnMouseDown(UINT /*nFlags*/, CPoint point);
@@ -77,21 +80,33 @@ public:
 	HBRUSH OnCtlColorStatic(CDCHandle dc, CStatic wndStatic);
 	void OnExit(UINT /*uNotifyCode*/, int /*nID*/, CWindow /*wnd*/);
 	void OnAbout(UINT /*uNotifyCode*/, int /*nID*/, CWindow wnd);
+	void InitializeControls(void);
+	void OnChar(TCHAR chChar, UINT nRepCnt, UINT nFlags);
 
 	BEGIN_MSG_MAP_EX(CMainFrame)
 		MSG_WM_CREATE(OnCreate)
+		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		MSG_WM_CLOSE(OnClose)
 		MSG_WM_HOTKEY(OnHotKey)
 		MSG_WM_TIMER(OnTimer)
+		MSG_WM_CHAR(OnChar)
 		MSG_WM_LBUTTONDOWN(OnMouseDown)
 		MSG_WM_LBUTTONUP(OnMouseUp)
 		MSG_WM_MOUSEMOVE(OnMouseMove)
 		MESSAGE_HANDLER_EX(WM_NOTIFYCALLBACK, OnTrayMenu)
 		COMMAND_ID_HANDLER_EX(IDM_EXIT, OnExit)
 		COMMAND_ID_HANDLER_EX(IDM_ABOUT, OnAbout)
-		MSG_WM_ERASEBKGND(OnEraseBkgnd)
-		MSG_WM_CTLCOLORSTATIC(OnCtlColorStatic)
+		//MSG_WM_ERASEBKGND(OnEraseBkgnd)
+		//MSG_WM_CTLCOLORSTATIC(OnCtlColorStatic)
 	END_MSG_MAP()
+
+private:
+	CFilterEdit editEnemyDistance;
+	CFilterEdit editEnemyAzimuth;
+	CFilterEdit editGunnerDistance;
+	CFilterEdit editGunnerAzimuth;
+	CEditCtl editResultDistance;
+	CEditCtl editResultAzimuth;
 };
 
 #endif // FOXHOLETOOL_H
