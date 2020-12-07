@@ -1,6 +1,9 @@
 #Directories
 Debug/
 .vs/
+x64/
+FoxholeTool/x64/
+FoxholeTool/Debug/
 
 # Prerequisites
 *.d
@@ -34,3 +37,7 @@ Debug/
 *.exe
 *.out
 *.app
+*.log
+
+*.aps
+FoxholeTool/FoxholeTool.aps
