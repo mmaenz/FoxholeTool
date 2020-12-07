@@ -2,8 +2,10 @@
 Debug/
 .vs/
 x64/
+Release/
 FoxholeTool/x64/
 FoxholeTool/Debug/
+FoxholeTool/Release/
 
 # Prerequisites
 *.d
@@ -17,6 +19,7 @@ FoxholeTool/Debug/
 # Precompiled Headers
 *.gch
 *.pch
+*.aps
 
 # Compiled Dynamic libraries
 *.so
@@ -38,6 +41,4 @@ FoxholeTool/Debug/
 *.out
 *.app
 *.log
-
-*.aps
-FoxholeTool/FoxholeTool.aps
+*.tlog

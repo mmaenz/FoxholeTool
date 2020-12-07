@@ -163,11 +163,11 @@
     <ResourceCompile Include="FoxholeTool.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="background.bmp" />
-    <Image Include="FoxholeTool.bmp" />
-    <Image Include="FoxholeTool.ico" />
-    <Image Include="foxholetoolwhite.ico" />
-    <Image Include="small.ico" />
+    <Image Include="Resources\background.bmp" />
+    <Image Include="Resources\FoxholeTool.ico" />
+    <Image Include="Resources\foxholetoolwhite.ico" />
+    <Image Include="Resources\small.ico" />
+    <Image Include="Resources\tray.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -258,7 +258,7 @@ float CMainFrame::toFloat(CString toFloat) {
 	// Check the entire string was consumed and if either failbit or badbit is set
 	if (iss.eof() && !iss.fail()) {
 		if (f <= 360 && f >= 0) {
-			return std::ceilf(f * 100.0) / 100.0;
+			return (float)(std::ceilf(f * 100.0f) / 100.0f);
 		}
 	}
 	return -1;
@@ -270,12 +270,12 @@ void CMainFrame::calculate(float eD, float eA, float gD, float gA) {
 	float aS = 0.f;
 	float rA = 0.f;
 
-	aD = (eA > gA) ? ToRadian(eA - gA) : ToRadian(gA - eA);
+	aD = (float)((eA > gA) ? ToRadian(eA - gA) : ToRadian(gA - eA));
 
 	rD = std::sqrt(eD * eD + gD * gD - 2 * eD * gD * std::cos(aD));
 
 	if (rD >= 45 && eD != 0) {
-		aS = std::roundf(ToDegree(std::acos((-(eD * eD) + gD * gD + rD * rD) / (2 * gD * rD))));
+		aS = (float)std::roundf((float)ToDegree(std::acosf((-(eD * eD) + gD * gD + rD * rD) / (2 * gD * rD))));
 		if (Angle(ToDegree(aD)) > 180) {
 			rA = (eA > gA) ? gA + 180 + aS : gA + 180 - aS;
 		} else {
