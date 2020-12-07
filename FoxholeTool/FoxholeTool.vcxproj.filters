@@ -57,19 +57,19 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="small.ico">
+    <Image Include="Resources\background.bmp">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="FoxholeTool.ico">
+    <Image Include="Resources\FoxholeTool.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="FoxholeTool.bmp">
+    <Image Include="Resources\foxholetoolwhite.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="foxholetoolwhite.ico">
+    <Image Include="Resources\small.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="background.bmp">
+    <Image Include="Resources\tray.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
