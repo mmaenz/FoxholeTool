@@ -43,11 +43,6 @@ void SetWindowStyle(HWND hWnd, int width, int height);
 #define ToDegree(angleRadians) ((angleRadians) * 180.0 / M_PI)
 #define Angle(angle) ((angle > 360) ? angle - 360 : angle)
 
-class CEditCtl : public CWindowImpl<CEditCtl, CEdit> {
-	BEGIN_MSG_MAP(CEditCtl)
-	END_MSG_MAP()
-};
-
 typedef CWinTraits<WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
 	WS_EX_APPWINDOW> CMainFrameTraits;
 
@@ -113,8 +108,8 @@ private:
 	CFilterEdit editEnemyAzimuth;
 	CFilterEdit editGunnerDistance;
 	CFilterEdit editGunnerAzimuth;
-	CEditCtl editResultDistance;
-	CEditCtl editResultAzimuth;
+	CFilterEdit editResultDistance;
+	CFilterEdit editResultAzimuth;
 };
 
 #endif // FOXHOLETOOL_H

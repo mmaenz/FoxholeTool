@@ -116,7 +116,7 @@ public:
       if( ::GetClassName(m_hWnd, szBuffer, (sizeof(szBuffer)/sizeof(TCHAR))-1) ) {
          ATLASSERT(::lstrcmpi(szBuffer, CEdit::GetWndClassName())==0);
          ATLASSERT(GetStyle() & WS_CHILD);
-         ATLASSERT((GetStyle() & (ES_LOWERCASE|ES_UPPERCASE|ES_PASSWORD|ES_READONLY))==0);
+         ATLASSERT((GetStyle() & (ES_LOWERCASE|ES_UPPERCASE|ES_PASSWORD))==0);
       }
 #endif // _DEBUG
 

@@ -350,14 +350,28 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE /*hPrevInst*/, LPTSTR lpstrCmdLi
 #ifdef _DEBUG
 	RedirectConsoleIO();
 #endif
-	hInstance = hInst;
-    HRESULT hRes = _Module.Init(NULL, hInst);
-    hRes;
-    ATLASSERT(SUCCEEDED(hRes));
+	int nRet = 0;
+	try {
+		HANDLE hMutex = OpenMutex(MUTEX_ALL_ACCESS, 0, _T("FoxholeTool_is_running"));
+		if (!hMutex) {
+			hMutex = CreateMutex(0, 0, _T("FoxholeTool_is_running"));
+		}
+		else {
+			return 0;
+		}
 
-    int nRet = Run(lpstrCmdLine, SW_HIDE);
+		hInstance = hInst;
+		HRESULT hRes = _Module.Init(NULL, hInst);
+		ATLASSERT(SUCCEEDED(hRes));
 
-    _Module.Term();
+		nRet = Run(lpstrCmdLine, SW_HIDE);
+
+		_Module.Term();
+		ReleaseMutex(hMutex);
+	}
+	catch (...) {
+		MessageBoxA(NULL, "Something went horribly wrong!", "I'm tired", MB_OK);
+	}
     return nRet;
 }
 
