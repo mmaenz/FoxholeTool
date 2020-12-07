@@ -28,8 +28,8 @@ bool overlayIsVisible = false;
 bool isDoubleKeypress = false;
 bool dragWindow = false;
 CPoint oldMousePos;
-int windowWidth = 400;
-int windowHeight = 200;
+int windowWidth = 260;
+int windowHeight = 150;
 
 // forwards
 void ShowContextMenu(HWND hWnd, HINSTANCE hInstance);
@@ -104,8 +104,8 @@ public:
 		MESSAGE_HANDLER_EX(WM_NOTIFYCALLBACK, OnTrayMenu)
 		COMMAND_ID_HANDLER_EX(IDM_EXIT, OnExit)
 		COMMAND_ID_HANDLER_EX(IDM_ABOUT, OnAbout)
-		//MSG_WM_ERASEBKGND(OnEraseBkgnd)
-		//MSG_WM_CTLCOLORSTATIC(OnCtlColorStatic)
+		MSG_WM_ERASEBKGND(OnEraseBkgnd)
+		MSG_WM_CTLCOLORSTATIC(OnCtlColorStatic)
 	END_MSG_MAP()
 
 private:

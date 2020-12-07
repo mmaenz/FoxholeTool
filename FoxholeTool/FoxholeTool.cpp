@@ -23,7 +23,7 @@ CAppModule _Module;
 
 CMainFrame::CMainFrame() {
 	m_hIcon = CTrayNotifyIcon::LoadIcon(IDI_FoxholeTool_white);
-	formFont.CreateFont(-12, 0, 0, 0, FW_NORMAL, false, false, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
+	formFont.CreateFont(-12, 0, 0, 0, FW_BOLD, false, false, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
 }
 
 BOOL CMainFrame::PreTranslateMessage(MSG* pMsg) {
@@ -35,15 +35,14 @@ BOOL CMainFrame::OnIdle() noexcept {
 }
 
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
-	hbrWhite = static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH));
-	hbrBlack = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
-	SetMsgHandled(false);
+	//SetMsgHandled(false);
 	return 0;
 }
 
 LRESULT CMainFrame::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	background.LoadBitmap(MAKEINTRESOURCE(IDB_BACKGROUND));
 	background.GetBitmapDimension(&bgSize);
+	
 	SetFont((HFONT)formFont);
 
 	CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -63,6 +62,14 @@ LRESULT CMainFrame::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 
 	CenterWindow();
 	this->InitializeControls();
+	
+	hbrWhite = static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH));
+	hbrBlack = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
+
+	CRect rect;
+	MapDialogRect(&rect);
+	windowWidth = rect.right;
+	windowHeight = rect.bottom;
 	return LRESULT();
 }
 
@@ -152,31 +159,36 @@ BOOL CMainFrame::OnEraseBkgnd(CDCHandle dc) {
 	if (!background.m_hBitmap) {
 		return true;
 	}
-	CRect rc;
-	GetClientRect(&rc);
-	SetMapMode(dc, MM_ANISOTROPIC);
-	SetWindowExtEx(dc, 100, 100, NULL);
-	SetViewportExtEx(dc, rc.right, rc.bottom, NULL);
-	FillRect(dc, &rc, hbrBlack);
 
-	/*
-	CDC dcMem;
-	dcMem.CreateCompatibleDC(dc);
-	HBITMAP cache = dcMem.SelectBitmap(background.m_hBitmap);
-
-	dc.BitBlt(0, 0, bgSize.cx, bgSize.cy, dcMem, 0, 0, SRCCOPY);
-	dc.SelectBitmap(cache); 
-	*/
-	return true;
+	CDC mdc;
+	mdc.CreateCompatibleDC(dc);
+	mdc.SelectBitmap(background);
+	CRect rClient;
+	GetClientRect(rClient);
+	dc.FillSolidRect(rClient, RGB(255, 255, 255));
+	
+	BITMAP bmp;
+	background.GetBitmap(&bmp); // Get bitmap info
+	CRect rCenterBmp = {};
+	rCenterBmp.left = 0; // center horizontal
+	rCenterBmp.right = bmp.bmWidth;
+	rCenterBmp.bottom = bmp.bmHeight;
+	rCenterBmp.top = 0;
+	dc.StretchBlt(0, 0, rClient.right, rClient.bottom, mdc, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+	return TRUE; // CBaseClass::OnEraseBkgnd(pDC); Don't let the baseclass do this -&gt; it may also draw the background
 }
 
 
 HBRUSH CMainFrame::OnCtlColorStatic(CDCHandle dc, CStatic wndStatic) {
-	SetTextColor(dc, RGB(255, 255, 255));
-	SetBkColor(dc, RGB(0, 0, 0));
-	SetBkMode(dc, TRANSPARENT);
-	return (HBRUSH)::GetStockObject(NULL_BRUSH);
+	if (wndStatic.GetDlgCtrlID() == IDC_LABEL_STATIC) {
+		dc.SetBkMode(TRANSPARENT);
+		dc.SetTextColor(RGB(255, 255, 255));
+		dc.SelectFont(formFont);
+		return (HBRUSH)::GetStockObject(NULL_BRUSH);
+	}
+	return (HBRUSH)::GetStockObject(WHITE_BRUSH);
 }
+
 void CMainFrame::OnExit(UINT /*uNotifyCode*/, int /*nID*/, CWindow /*wnd*/) {
 	overlayIsVisible = false;
 	PostMessage(WM_CLOSE);
