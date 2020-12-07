@@ -3,7 +3,7 @@ Needed for foxhole game, eat while building! Starving doesn't help anybody...
 
 # Usage
 F2 - use hammer, click left mouse button to stop  
-F3 - open artillery calculator, while in game press F3 again to refocus on enemy distance.
+F3 - open artillery calculator, while in game press F3 again to refocus for new distance.
      Press F3 twice to hide.
 
 The result is always copied to clipboard for fast paste to chat.  
