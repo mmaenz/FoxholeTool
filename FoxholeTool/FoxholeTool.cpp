@@ -201,21 +201,21 @@ void CMainFrame::OnAbout(UINT /*uNotifyCode*/, int /*nID*/, CWindow wnd) {
 
 void CMainFrame::InitializeControls(void) {
 	editEnemyDistance.SubclassWindow(GetDlgItem(IDC_ENEMY_DISTANCE));
-	editEnemyDistance.SetLimitText(6);
+	editEnemyDistance.SetLimitText(3);
 	editEnemyDistance.SetExtendedEditStyle(ES_EX_JUMPY);
-	editEnemyDistance.SetIncludeMask(_T("1234567890."));
+	editEnemyDistance.SetIncludeMask(_T("1234567890"));
 	editEnemyAzimuth.SubclassWindow(GetDlgItem(IDC_ENEMY_AZIMUTH));
-	editEnemyAzimuth.SetLimitText(6);
+	editEnemyAzimuth.SetLimitText(3);
 	editEnemyAzimuth.SetExtendedEditStyle(ES_EX_JUMPY);
-	editEnemyAzimuth.SetIncludeMask(_T("1234567890."));
+	editEnemyAzimuth.SetIncludeMask(_T("1234567890"));
 	editGunnerDistance.SubclassWindow(GetDlgItem(IDC_GUNNER_DISTANCE));
-	editGunnerDistance.SetLimitText(6);
+	editGunnerDistance.SetLimitText(3);
 	editGunnerDistance.SetExtendedEditStyle(ES_EX_JUMPY);
-	editGunnerDistance.SetIncludeMask(_T("1234567890."));
+	editGunnerDistance.SetIncludeMask(_T("1234567890"));
 	editGunnerAzimuth.SubclassWindow(GetDlgItem(IDC_GUNNER_AZIMUTH));
-	editGunnerAzimuth.SetLimitText(6);
+	editGunnerAzimuth.SetLimitText(3);
 	editGunnerAzimuth.SetExtendedEditStyle(ES_EX_JUMPY);
-	editGunnerAzimuth.SetIncludeMask(_T("1234567890."));
+	editGunnerAzimuth.SetIncludeMask(_T("1234567890"));
 	editResultDistance.SubclassWindow(GetDlgItem(IDC_RESULT_DISTANCE));
 	editResultAzimuth.SubclassWindow(GetDlgItem(IDC_RESULT_AZIMUTH));
 }
@@ -225,24 +225,43 @@ LRESULT CMainFrame::OnChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	editEnemyDistance.GetWindowText(sWindowText);
 	float eD = toFloat(sWindowText);
 	if (eD == -1) {
+		editResultDistance.SetWindowText(_T(""));
+		editResultAzimuth.SetWindowText(_T(""));
+		copyToClipboard(_T(""));
 		return LRESULT();
 	}
 
 	editEnemyAzimuth.GetWindowText(sWindowText);
 	float eA = toFloat(sWindowText);
-	if (eA == -1) {
+	if (eA == -1 || eA > 360) {
+		editResultDistance.SetWindowText(_T(""));
+		editResultAzimuth.SetWindowText(_T(""));
+		copyToClipboard(_T(""));
 		return LRESULT();
 	}
 
 	editGunnerDistance.GetWindowText(sWindowText);
 	float gD = toFloat(sWindowText);
 	if (gD == -1) {
+		editResultDistance.SetWindowText(_T(""));
+		editResultAzimuth.SetWindowText(_T(""));
+		copyToClipboard(_T(""));
 		return LRESULT();
 	}
 
 	editGunnerAzimuth.GetWindowText(sWindowText);
 	float gA = toFloat(sWindowText);
-	if (gA == -1) {
+	if (gA == -1 || gA > 360) {
+		editResultDistance.SetWindowText(_T(""));
+		editResultAzimuth.SetWindowText(_T(""));
+		copyToClipboard(_T(""));
+		return LRESULT();
+	}
+
+	if (gA == eA && gD == eD) {
+		editResultDistance.SetWindowText(_T(""));
+		editResultAzimuth.SetWindowText(_T(""));
+		copyToClipboard(_T(""));
 		return LRESULT();
 	}
 
@@ -289,13 +308,13 @@ void CMainFrame::calculate(float eD, float eA, float gD, float gA) {
 		rA = Angle(std::roundf(rA));
 		
 		CString resultDistance;
-		resultDistance.Format(_T("%.2f"), rD);
+		resultDistance.Format(_T("%.0f"), rD);
 		CString resultAzimuth;
-		resultAzimuth.Format(_T("%.2f"), rA);
+		resultAzimuth.Format(_T("%.0f"), rA);
 		editResultDistance.SetWindowText(resultDistance);
 		editResultAzimuth.SetWindowText(resultAzimuth);
 		CString result;
-		result.Format(_T("Distance %.2f / Azimuth %.2f"), rD, rA);
+		result.Format(_T("Distance %.0f / Azimuth %.0f"), rD, rA);
 		copyToClipboard(result);
 	}
 }
