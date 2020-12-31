@@ -1,6 +1,9 @@
 # FoxholeTool
 Needed for foxhole game, eat while building! Starving doesn't help anybody...  
 I find it really annoying to use the windows auto hold as it always activates when using the map or rifle. There may be other more generic tools to achieve the same but I don't care. It ist just right for Foxhole. The source is free, anyone is invited to change it as wanted. Please don't open issues with request for changing the keybinding. Clone - change - build and be happy.
+  
+Windows Defender is not happy about unsigned software. You may see a blue dialog where you have to confirm to go ahead. If you are unsure, build it yourself.
+
 
 # Usage
 F2 - use hammer, click left mouse button to stop  
