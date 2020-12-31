@@ -16,7 +16,8 @@ FoxholeTool is running in background and registers a handler in systray. To clos
 ![Screenshot](assets/screenshot_tray.png)
   
   
-The tool uses no magic. It just sends an left mouse button down event to windows without up. As of the nature of windows window handling it works best in fullscreen window mode. You can still use it in fullscreen but it may not overlays correctly or windows are flashing. Foxhole sound is bound to active focus. While FoxholeTool is focused, you will hear no sound including ingame voices.
+The tool uses no magic. It just sends an left mouse button down event to windows without up event - that's it.  
+As of the nature of windows window handling it works best in windowed fullscreen mode. You can still use it in fullscreen but it may not overlays correctly or windows are flashing. Foxhole sound is bound to active focus. While FoxholeTool is focused, you will hear no sound including ingame voices.
 The result is always copied to clipboard for fast paste to chat.  
 
 # How to build
