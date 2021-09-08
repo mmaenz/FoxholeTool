@@ -52,8 +52,19 @@ LRESULT CMainFrame::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 
 	REGISTER_HOTKEY_F2 = GlobalAddAtomA("REGISTER_HOTKEY_F2");
 	REGISTER_HOTKEY_F3 = GlobalAddAtomA("REGISTER_HOTKEY_F3");
+	REGISTER_HOTKEY_F4 = GlobalAddAtomA("REGISTER_HOTKEY_F4");
+	REGISTER_HOTKEY_SHIFTF4 = GlobalAddAtomA("REGISTER_HOTKEY_SHIFTF4");
+
+	MouseInput.type = INPUT_MOUSE;
+	MouseInput.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+	KeyboardInput.type = INPUT_KEYBOARD;
+	KeyboardInput.ki.wVk = VK_SHIFT;
+
 	RegisterHotkeyF2(this->operator HWND());
 	RegisterHotkeyF3(this->operator HWND());
+	RegisterHotkeyF4(this->operator HWND());
+	RegisterHotkeyShiftF4(this->operator HWND());
+	
 	SetWindowStyle(this->operator HWND(), windowWidth, windowHeight);
 	if (!m_TrayIcon.Create(this, IDR_TRAYPOPUP, _T("FoxholeTool\n\nF2 - use hammer (click to stop)\nF3 - show/focus artillery calculator (2x hide)"), m_hIcon, WM_NOTIFYCALLBACK, IDM_CONTEXTMENU, true)) {
 		ATLTRACE(_T("Failed to create tray icon 1\n"));
@@ -82,6 +93,8 @@ void CMainFrame::OnClose() {
 		m_TrayIcon.Delete(true);
 		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_F2);
 		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_F3);
+		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_F4);
+		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_SHIFTF4);
 		SetMsgHandled(false);
 		PostQuitMessage(0);
 	}
@@ -99,14 +112,13 @@ LRESULT CMainFrame::OnTrayMenu(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 	if (nHotKeyID == REGISTER_HOTKEY_F2) {
-		SendInput(1, &Input, sizeof(INPUT));
+		SendInput(1, &MouseInput, sizeof(INPUT));
 	}
 	else if (nHotKeyID == REGISTER_HOTKEY_F3) {
 		if (isDoubleKeypress) {
 			overlayIsVisible = !overlayIsVisible;
 			ShowWindow(overlayIsVisible);
 			isDoubleKeypress = false;
-			//KillTimer(DOUBLE_KEYPRESS_TIMER);
 		}
 		else {
 			if (!overlayIsVisible) {
@@ -117,17 +129,48 @@ void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 				SetActiveWindow();
 				SetForegroundWindow(this->operator HWND());
 				SetFocus();
-				//KillTimer(DOUBLE_KEYPRESS_TIMER);
 				isDoubleKeypress = true;
 				SetTimer(DOUBLE_KEYPRESS_TIMER, GetDoubleClickTime());
 			}
 		}
 	}
+	else if (nHotKeyID == REGISTER_HOTKEY_F4) {
+		KillTimer(AUTOCLICK_TIMER);
+		if (isAutoclickerRunning) {
+			isAutoclickerRunning = false;
+		}
+		else {
+			isShiftF4 = false;
+			OnTimer(AUTOCLICK_TIMER);
+			SetTimer(AUTOCLICK_TIMER, AUTOCLICK_TIMER_INTERVAL);
+			isAutoclickerRunning = true;
+		}
+	}
+	else if (nHotKeyID == REGISTER_HOTKEY_SHIFTF4) {
+		KillTimer(AUTOCLICK_TIMER);
+		isShiftF4 = true;
+		OnTimer(AUTOCLICK_TIMER);
+		SetTimer(AUTOCLICK_TIMER, AUTOCLICK_TIMER_INTERVAL);
+		isAutoclickerRunning = true;
+	}
 }
 
 void CMainFrame::OnTimer(UINT_PTR timerId) {
-	KillTimer(timerId);
-	isDoubleKeypress = false;
+	if (timerId == AUTOCLICK_TIMER) {
+		if(isShiftF4) {
+			KeyboardInput.ki.dwFlags = 0;
+			::SendInput(1, &KeyboardInput, sizeof(INPUT));
+		}
+		::SendInput(1, &MouseInput, sizeof(INPUT));
+		if (isShiftF4) {
+			KeyboardInput.ki.dwFlags = KEYEVENTF_KEYUP;
+			::SendInput(1, &KeyboardInput, sizeof(INPUT));
+		}
+	}
+	else {
+		KillTimer(timerId);
+		isDoubleKeypress = false;
+	}
 }
 
 void CMainFrame::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) {
@@ -304,7 +347,7 @@ void CMainFrame::calculate(float eD, float eA, float gD, float gA) {
 				rA = gA + 180 + aS;
 			}
 		}
-		
+	
 		rA = Angle(std::roundf(rA));
 		
 		CString resultDistance;
@@ -352,7 +395,7 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_HIDE) {
 
     CMainFrame wndMain;
     
-	HWND hWnd = wndMain.Create(NULL);
+	hWnd = wndMain.Create(NULL);
     if (hWnd == NULL) {
         ATLTRACE(_T("Main window creation failed!\n"));
         return 0;
@@ -421,9 +464,6 @@ void ShowContextMenu(HWND hwnd, HINSTANCE hInstance) {
 }
 
 void RegisterHotkeyF2(HWND hWnd) {
-    Input.type = INPUT_MOUSE;
-    Input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-
     RegisterHotKey(
         hWnd,
         REGISTER_HOTKEY_F2,
@@ -439,6 +479,22 @@ void RegisterHotkeyF3(HWND hWnd) {
         VK_F3);
 }
 
+void RegisterHotkeyF4(HWND hWnd) {
+	RegisterHotKey(
+		hWnd,
+		REGISTER_HOTKEY_F4,
+		MOD_NOREPEAT,
+		VK_F4);
+}
+
+void RegisterHotkeyShiftF4(HWND hWnd) {
+	RegisterHotKey(
+		hWnd,
+		REGISTER_HOTKEY_SHIFTF4,
+		MOD_SHIFT,
+		VK_F4);
+}
+
 void UnregisterHotkey(HWND hWnd, int hotkey) {
     UnregisterHotKey(hWnd, hotkey);
 }
@@ -452,4 +508,3 @@ void SetWindowStyle(HWND hWnd, int width, int height) {
     SetWindowLong(hWnd, GWL_STYLE, lStyle);
     SetWindowRgn(hWnd, CreateRoundRectRgn(0, 0, width, height, 20, 20), true);
 }
-
