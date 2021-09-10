@@ -21,7 +21,6 @@ class __declspec(uuid("9D0B8B92-4E1C-488e-A1E1-2331AFCE2CB5")) NotificationIcon;
 // Globals
 HINSTANCE hInstance = NULL;	// current instance
 HWND hWnd = NULL;
-HHOOK globalMouseHook;
 int REGISTER_HOTKEY_F2 = 1;
 int REGISTER_HOTKEY_F3 = 2;
 int REGISTER_HOTKEY_F4 = 3;

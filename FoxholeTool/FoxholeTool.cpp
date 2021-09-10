@@ -66,7 +66,7 @@ LRESULT CMainFrame::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	RegisterHotkeyShiftF4(this->operator HWND());
 	
 	SetWindowStyle(this->operator HWND(), windowWidth, windowHeight);
-	if (!m_TrayIcon.Create(this, IDR_TRAYPOPUP, _T("FoxholeTool\n\nF2 - use hammer (click to stop)\nF3 - show/focus artillery calculator (2x hide)"), m_hIcon, WM_NOTIFYCALLBACK, IDM_CONTEXTMENU, true)) {
+	if (!m_TrayIcon.Create(this, IDR_TRAYPOPUP, _T("F2 - use hammer (click to stop)\nF3 - show/focus artillery calculator (2x hide)\n(Shift)-F4 - repeat pulling (mouse move stops)"), m_hIcon, WM_NOTIFYCALLBACK, IDM_CONTEXTMENU, true)) {
 		ATLTRACE(_T("Failed to create tray icon 1\n"));
 		return -1;
 	}
@@ -141,6 +141,7 @@ void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 		}
 		else {
 			isShiftF4 = false;
+			GetCursorPos(&point);
 			OnTimer(AUTOCLICK_TIMER);
 			SetTimer(AUTOCLICK_TIMER, AUTOCLICK_TIMER_INTERVAL);
 			isAutoclickerRunning = true;
@@ -148,6 +149,7 @@ void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 	}
 	else if (nHotKeyID == REGISTER_HOTKEY_SHIFTF4) {
 		KillTimer(AUTOCLICK_TIMER);
+		GetCursorPos(&point);
 		isShiftF4 = true;
 		OnTimer(AUTOCLICK_TIMER);
 		SetTimer(AUTOCLICK_TIMER, AUTOCLICK_TIMER_INTERVAL);
@@ -157,6 +159,12 @@ void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 
 void CMainFrame::OnTimer(UINT_PTR timerId) {
 	if (timerId == AUTOCLICK_TIMER) {
+		GetCursorPos(&curpoint);
+		if (point.x != curpoint.x && point.y != curpoint.y) {
+			KillTimer(timerId);
+			isAutoclickerRunning = false;
+			return;
+		}
 		if(isShiftF4) {
 			KeyboardInput.ki.dwFlags = 0;
 			::SendInput(1, &KeyboardInput, sizeof(INPUT));
@@ -239,7 +247,7 @@ void CMainFrame::OnExit(UINT /*uNotifyCode*/, int /*nID*/, CWindow /*wnd*/) {
 
 
 void CMainFrame::OnAbout(UINT /*uNotifyCode*/, int /*nID*/, CWindow wnd) {
-	MessageBoxW(L"Made by [3SP] Ben Button\nhttps://github.com/mmaenz/foxholetool\n\nUse F2 for automatic hammer\nUse F3 to show/refocus artillery calculator\nDouble F3 to hide\n(Set Foxhole to windowed fullscreen for overlay)\n", L"FoxholeTool v0.0.1", MB_OK);
+	MessageBoxW(L"Made by [3SP] Ben Button\nhttps://github.com/mmaenz/foxholetool\n\nUse F2 for automatic hammer\nUse F3 to show/refocus artillery calculator (windowed fullsceen, double F3 to hide)\nUse (Shift-)F4 to do auto repeat left click and move mouse to stop", L"FoxholeTool v0.0.2", MB_OK);
 }
 
 void CMainFrame::InitializeControls(void) {
