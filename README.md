@@ -19,6 +19,8 @@ FoxholeTool is running in background and registers a handler in systray. To clos
   
 The tool uses no magic. It just sends an left mouse button down event to windows without up. As of the nature of windows window handling it works best in fullscreen window mode. You can still use it in fullscreen but it may not overlays correctly or windows are flashing. Foxhole sound is bound to active focus. While FoxholeTool is focused, you will hear no sound including ingame voices.
 The result is always copied to clipboard for fast paste to chat.  
+  
+The F4-autoclicker simply sends a mouse click event once per second. If shift is pressed it sends shift-mouse click once per second. When moving the mouse or by pressing F4 again it stops. As simple as that!  
 
 # How to build
 
