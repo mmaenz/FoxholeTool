@@ -23,14 +23,14 @@ HINSTANCE hInstance = NULL;	// current instance
 HWND hWnd = NULL;
 int REGISTER_HOTKEY_F2 = 1;
 int REGISTER_HOTKEY_F3 = 2;
-int REGISTER_HOTKEY_F4 = 3;
-int REGISTER_HOTKEY_SHIFTF4 = 4;
+int REGISTER_HOTKEY_F5 = 3;
+int REGISTER_HOTKEY_SHIFTF5 = 4;
 int DOUBLE_KEYPRESS_TIMER = 1;
 int AUTOCLICK_TIMER = 2;
 int AUTOCLICK_TIMER_INTERVAL = 1000;
 INPUT MouseInput = { 0 };
 INPUT KeyboardInput = { 0 };
-bool isShiftF4 = false;
+bool isShiftF5 = false;
 bool isAutoclickerRunning = false;
 bool overlayIsVisible = false;
 bool isDoubleKeypress = false;
@@ -43,8 +43,8 @@ int windowHeight = 150;
 void ShowContextMenu(HWND hWnd, HINSTANCE hInstance);
 void RegisterHotkeyF2(HWND hWnd);
 void RegisterHotkeyF3(HWND hWnd);
-void RegisterHotkeyF4(HWND hWnd);
-void RegisterHotkeyShiftF4(HWND hWnd);
+void RegisterHotkeyF5(HWND hWnd);
+void RegisterHotkeyShiftF5(HWND hWnd);
 void UnregisterHotkey(HWND hWnd, int hotkey);
 void SetWindowStyle(HWND hWnd, int width, int height);
 
