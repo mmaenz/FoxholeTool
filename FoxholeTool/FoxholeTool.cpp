@@ -52,8 +52,8 @@ LRESULT CMainFrame::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 
 	REGISTER_HOTKEY_F2 = GlobalAddAtomA("REGISTER_HOTKEY_F2");
 	REGISTER_HOTKEY_F3 = GlobalAddAtomA("REGISTER_HOTKEY_F3");
-	REGISTER_HOTKEY_F4 = GlobalAddAtomA("REGISTER_HOTKEY_F4");
-	REGISTER_HOTKEY_SHIFTF4 = GlobalAddAtomA("REGISTER_HOTKEY_SHIFTF4");
+	REGISTER_HOTKEY_F5 = GlobalAddAtomA("REGISTER_HOTKEY_F5");
+	REGISTER_HOTKEY_SHIFTF5 = GlobalAddAtomA("REGISTER_HOTKEY_SHIFTF5");
 
 	MouseInput.type = INPUT_MOUSE;
 	MouseInput.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
@@ -62,11 +62,11 @@ LRESULT CMainFrame::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 
 	RegisterHotkeyF2(this->operator HWND());
 	RegisterHotkeyF3(this->operator HWND());
-	RegisterHotkeyF4(this->operator HWND());
-	RegisterHotkeyShiftF4(this->operator HWND());
+	RegisterHotkeyF5(this->operator HWND());
+	RegisterHotkeyShiftF5(this->operator HWND());
 	
 	SetWindowStyle(this->operator HWND(), windowWidth, windowHeight);
-	if (!m_TrayIcon.Create(this, IDR_TRAYPOPUP, _T("F2 - use hammer (click to stop)\nF3 - show/focus artillery calculator (2x hide)\n(Shift)-F4 - repeat pulling (mouse move stops)"), m_hIcon, WM_NOTIFYCALLBACK, IDM_CONTEXTMENU, true)) {
+	if (!m_TrayIcon.Create(this, IDR_TRAYPOPUP, _T("F2 - use hammer (click to stop)\nF3 - show/focus artillery calculator (2x hide)\n(Shift)-F5 - repeat pulling (mouse move stops)"), m_hIcon, WM_NOTIFYCALLBACK, IDM_CONTEXTMENU, true)) {
 		ATLTRACE(_T("Failed to create tray icon 1\n"));
 		return -1;
 	}
@@ -93,8 +93,8 @@ void CMainFrame::OnClose() {
 		m_TrayIcon.Delete(true);
 		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_F2);
 		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_F3);
-		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_F4);
-		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_SHIFTF4);
+		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_F5);
+		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_SHIFTF5);
 		SetMsgHandled(false);
 		PostQuitMessage(0);
 	}
@@ -134,23 +134,23 @@ void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 			}
 		}
 	}
-	else if (nHotKeyID == REGISTER_HOTKEY_F4) {
+	else if (nHotKeyID == REGISTER_HOTKEY_F5) {
 		KillTimer(AUTOCLICK_TIMER);
 		if (isAutoclickerRunning) {
 			isAutoclickerRunning = false;
 		}
 		else {
-			isShiftF4 = false;
+			isShiftF5 = false;
 			GetCursorPos(&point);
 			OnTimer(AUTOCLICK_TIMER);
 			SetTimer(AUTOCLICK_TIMER, AUTOCLICK_TIMER_INTERVAL);
 			isAutoclickerRunning = true;
 		}
 	}
-	else if (nHotKeyID == REGISTER_HOTKEY_SHIFTF4) {
+	else if (nHotKeyID == REGISTER_HOTKEY_SHIFTF5) {
 		KillTimer(AUTOCLICK_TIMER);
 		GetCursorPos(&point);
-		isShiftF4 = true;
+		isShiftF5 = true;
 		OnTimer(AUTOCLICK_TIMER);
 		SetTimer(AUTOCLICK_TIMER, AUTOCLICK_TIMER_INTERVAL);
 		isAutoclickerRunning = true;
@@ -165,12 +165,12 @@ void CMainFrame::OnTimer(UINT_PTR timerId) {
 			isAutoclickerRunning = false;
 			return;
 		}
-		if(isShiftF4) {
+		if(isShiftF5) {
 			KeyboardInput.ki.dwFlags = 0;
 			::SendInput(1, &KeyboardInput, sizeof(INPUT));
 		}
 		::SendInput(1, &MouseInput, sizeof(INPUT));
-		if (isShiftF4) {
+		if (isShiftF5) {
 			KeyboardInput.ki.dwFlags = KEYEVENTF_KEYUP;
 			::SendInput(1, &KeyboardInput, sizeof(INPUT));
 		}
@@ -247,7 +247,7 @@ void CMainFrame::OnExit(UINT /*uNotifyCode*/, int /*nID*/, CWindow /*wnd*/) {
 
 
 void CMainFrame::OnAbout(UINT /*uNotifyCode*/, int /*nID*/, CWindow wnd) {
-	MessageBoxW(L"Made by [3SP] Ben Button\nhttps://github.com/mmaenz/foxholetool\n\nUse F2 for automatic hammer\nUse F3 to show/refocus artillery calculator (windowed fullsceen, double F3 to hide)\nUse (Shift-)F4 to do auto repeat left click and move mouse to stop", L"FoxholeTool v0.0.2", MB_OK);
+	MessageBoxW(L"Made by [3SP] Ben Button\nhttps://github.com/mmaenz/foxholetool\n\nUse F2 for automatic hammer\nUse F3 to show/refocus artillery calculator (windowed fullsceen, double F3 to hide)\nUse (Shift-)F5 to do auto repeat left click and move mouse to stop", L"FoxholeTool v0.0.2", MB_OK);
 }
 
 void CMainFrame::InitializeControls(void) {
@@ -487,20 +487,20 @@ void RegisterHotkeyF3(HWND hWnd) {
         VK_F3);
 }
 
-void RegisterHotkeyF4(HWND hWnd) {
+void RegisterHotkeyF5(HWND hWnd) {
 	RegisterHotKey(
 		hWnd,
-		REGISTER_HOTKEY_F4,
+		REGISTER_HOTKEY_F5,
 		MOD_NOREPEAT,
-		VK_F4);
+		VK_F5);
 }
 
-void RegisterHotkeyShiftF4(HWND hWnd) {
+void RegisterHotkeyShiftF5(HWND hWnd) {
 	RegisterHotKey(
 		hWnd,
-		REGISTER_HOTKEY_SHIFTF4,
+		REGISTER_HOTKEY_SHIFTF5,
 		MOD_SHIFT,
-		VK_F4);
+		VK_F5);
 }
 
 void UnregisterHotkey(HWND hWnd, int hotkey) {
