@@ -6,7 +6,7 @@ I find it really annoying to use the windows auto hold as it always activates wh
 F2 - use hammer, click left mouse button to stop  
 F3 - open artillery calculator, while in game press F3 again to refocus for new distance.
      Press F3 twice to hide.  
-F4 - Autoclicker, pick from inventory. Use SHIFT-F4 for 3 items at once. Move mouse to stop.  
+F5 - Autoclicker, pick from inventory. Use SHIFT-F5 for 3 items at once. Move mouse to stop.  
   
 ![Screenshot](assets/screenshot_window.png)  
   
