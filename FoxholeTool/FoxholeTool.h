@@ -25,6 +25,7 @@ int REGISTER_HOTKEY_F2 = 1;
 int REGISTER_HOTKEY_F3 = 2;
 int REGISTER_HOTKEY_F5 = 3;
 int REGISTER_HOTKEY_SHIFTF5 = 4;
+int REGISTER_HOTKEY_END = 5;
 int DOUBLE_KEYPRESS_TIMER = 1;
 int AUTOCLICK_TIMER = 2;
 int AUTOCLICK_TIMER_INTERVAL = 1000;
@@ -45,6 +46,7 @@ void RegisterHotkeyF2(HWND hWnd);
 void RegisterHotkeyF3(HWND hWnd);
 void RegisterHotkeyF5(HWND hWnd);
 void RegisterHotkeyShiftF5(HWND hWnd);
+void RegisterHotkeyEnd(HWND hWnd);
 void UnregisterHotkey(HWND hWnd, int hotkey);
 void SetWindowStyle(HWND hWnd, int width, int height);
 
