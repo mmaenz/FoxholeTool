@@ -54,6 +54,7 @@ LRESULT CMainFrame::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	REGISTER_HOTKEY_F3 = GlobalAddAtomA("REGISTER_HOTKEY_F3");
 	REGISTER_HOTKEY_F5 = GlobalAddAtomA("REGISTER_HOTKEY_F5");
 	REGISTER_HOTKEY_SHIFTF5 = GlobalAddAtomA("REGISTER_HOTKEY_SHIFTF5");
+	REGISTER_HOTKEY_END = GlobalAddAtomA("REGISTER_HOTKEY_END");
 
 	MouseInput.type = INPUT_MOUSE;
 	MouseInput.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
@@ -64,6 +65,7 @@ LRESULT CMainFrame::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	RegisterHotkeyF3(this->operator HWND());
 	RegisterHotkeyF5(this->operator HWND());
 	RegisterHotkeyShiftF5(this->operator HWND());
+	RegisterHotkeyEnd(this->operator HWND());
 	
 	SetWindowStyle(this->operator HWND(), windowWidth, windowHeight);
 	if (!m_TrayIcon.Create(this, IDR_TRAYPOPUP, _T("F2 - use hammer (click to stop)\nF3 - show/focus artillery calculator (2x hide)\n(Shift)-F5 - repeat pulling (mouse move stops)"), m_hIcon, WM_NOTIFYCALLBACK, IDM_CONTEXTMENU, true)) {
@@ -95,6 +97,7 @@ void CMainFrame::OnClose() {
 		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_F3);
 		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_F5);
 		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_SHIFTF5);
+		UnregisterHotKey(this->operator HWND(), REGISTER_HOTKEY_END);
 		SetMsgHandled(false);
 		PostQuitMessage(0);
 	}
@@ -154,6 +157,49 @@ void CMainFrame::OnHotKey(int nHotKeyID, UINT uModifiers, UINT uVirtKey) {
 		OnTimer(AUTOCLICK_TIMER);
 		SetTimer(AUTOCLICK_TIMER, AUTOCLICK_TIMER_INTERVAL);
 		isAutoclickerRunning = true;
+	}
+	else if (nHotKeyID == REGISTER_HOTKEY_END) {
+		// I KNOW THAT SENDINPUT IS MEANT TO BE USED WITH ARRAYS OF INPUTS!!!
+		// If you know it better, do it!
+		
+		INPUT run;
+		run.type = INPUT_KEYBOARD;
+		run.ki.wScan = 0;
+		run.ki.time = 0;
+		run.ki.dwExtraInfo = 0;
+
+		// ENTER for chatbox
+		run.ki.dwFlags = 0;
+		run.ki.wVk = VK_RETURN;
+		SendInput(1, &run, sizeof(INPUT));
+		run.ki.dwFlags = KEYEVENTF_KEYUP;
+		SendInput(1, &run, sizeof(INPUT));
+		Sleep(50);
+
+		// CTRL+W
+		// Send CTRL first
+		run.ki.dwFlags = 0;
+		run.ki.wVk = VK_CONTROL;
+		SendInput(1, &run, sizeof(INPUT));
+		// Send W next
+		run.ki.wVk = 'W';
+		SendInput(1, &run, sizeof(INPUT));
+		// Release W
+		run.ki.dwFlags = KEYEVENTF_KEYUP;
+		run.ki.wVk = 'W';
+		SendInput(1, &run, sizeof(INPUT));
+		// Release CTRL
+		run.ki.dwFlags = KEYEVENTF_KEYUP;
+		run.ki.wVk = VK_CONTROL;
+		SendInput(1, &run, sizeof(INPUT));
+		Sleep(50);
+
+		// ENTER again
+		run.ki.dwFlags = 0;
+		run.ki.wVk = VK_RETURN;
+		SendInput(1, &run, sizeof(INPUT));
+		run.ki.dwFlags = KEYEVENTF_KEYUP;
+		SendInput(1, &run, sizeof(INPUT));
 	}
 }
 
@@ -501,6 +547,14 @@ void RegisterHotkeyShiftF5(HWND hWnd) {
 		REGISTER_HOTKEY_SHIFTF5,
 		MOD_SHIFT,
 		VK_F5);
+}
+
+void RegisterHotkeyEnd(HWND hWnd) {
+	RegisterHotKey(
+		hWnd,
+		REGISTER_HOTKEY_END,
+		MOD_NOREPEAT,
+		VK_END);
 }
 
 void UnregisterHotkey(HWND hWnd, int hotkey) {
