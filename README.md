@@ -6,7 +6,7 @@ I find it really annoying to use the windows auto hold as it always activates wh
 F2 - use hammer, click left mouse button to stop  
 F3 - open artillery calculator, while in game press F3 again to refocus for new distance.
      Press F3 twice to hide.  
-F4 - Autoclicker, pick from inventory. Use SHIFT-F4 for 3 items at once. Press F4 again to stop picking!
+F4 - Autoclicker, pick from inventory. Use SHIFT-F4 for 3 items at once. Press F4 again to stop picking!  
 ![Screenshot](assets/screenshot_window.png)  
   
 Window can be moved freely. It is fairly small to allow for maximum game overview. You can drag the window around to your preferred corner.  
@@ -18,6 +18,9 @@ FoxholeTool is running in background and registers a handler in systray. To clos
   
 The tool uses no magic. It just sends an left mouse button down event to windows without up. As of the nature of windows window handling it works best in fullscreen window mode. You can still use it in fullscreen but it may not overlays correctly or windows are flashing. Foxhole sound is bound to active focus. While FoxholeTool is focused, you will hear no sound including ingame voices.
 The result is always copied to clipboard for fast paste to chat.  
+
+When pressing END on keyboard it send keystrokes RETURN --> CTRL+W --> RETURN to the active desktop window (which should be Foxhole) that starts the automated walking. There is no convenient way to send key hold to other active window.
+Between keystrokes is a 50ms pause to let Foxhole react to the input. Thats why you see the chat box flickering!
 
 # How to build
 
