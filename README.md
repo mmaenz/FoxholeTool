@@ -22,6 +22,9 @@ The result is always copied to clipboard for fast paste to chat.
   
 The F5-autoclicker simply sends a mouse click event once per second. If shift is pressed it sends shift-mouse click once per second. When moving the mouse or by pressing F5 again it stops. As simple as that!  
 
+When pressing END on keyboard it send keystrokes RETURN --> CTRL+W --> RETURN to the active desktop window (which should be Foxhole) that starts the automated walking. There is no convenient way to send key hold to other active window.
+Between keystrokes is a 50ms pause to let Foxhole react to the input. Thats why you see the chat box flickering!  
+
 # How to build
 
 Use Visual Studio 2019 to compile.
